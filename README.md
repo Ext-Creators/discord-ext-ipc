@@ -35,8 +35,8 @@ class Bot(commands.Bot):
         """Event dispatched upon our discord bot being ready"""
         print("Bot ready")
 
-bot = Bot(commands_prefix="!", case_insensitive=True)
-bot_ipc = Server(bot, 8765, b"secret_key")
+bot = Bot(command_prefix="!", case_insensitive=True)
+bot_ipc = Server(bot, "localhost", 8765, "secret_key")
 
 # ipc.server.Server takes four arguments: the bot object, the port to run the IPC on, and a secret key used to authenticate client connections (seen in the web server file).
 
@@ -56,13 +56,13 @@ from quart import Quart
 from discord.ext.ipc import Client
 
 app = Quart(__name__)
-web_ipc = Client("localhost", 8765, b"secret_key")
+web_ipc = Client("localhost", 8765, "secret_key")
 
 @app.route("/")
 async def show_guilds():
     guild_count = await web_ipc.request("get_guild_count") # Make a request to get the bot's IPC get_guild_count route.
 
-    return data # return the data sent to us.
+    return guild_count # return the data sent to us.
 
 if __name__ == "__main__":
     app.run()
