@@ -1,7 +1,11 @@
+# python PyPI files / dirs
 *.egg-info/
-__pycache__/
 build/
 dist/
-tests/
+
+# pycache
+__pycache__/
+
+# python test files
 test.py
 web-test.py

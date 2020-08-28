@@ -1,3 +1,17 @@
+"""
+    Copyright 2020 Ext-Creators
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+
+
 import json
 import asyncio
 
@@ -40,6 +54,8 @@ class Server:
         self.endpoints = {}
         
         self.secret_key = secret_key
+        
+        self.multicast_grp = socket.gethostbyname(socket.gethostname())
     
     def route(self, name=None):
         """Used to register a coroutine as an endpoint"""
@@ -50,7 +66,7 @@ class Server:
                 self.endpoints[name] = func
         
         return decorator
-    
+        
     def client_connection_callback(self, cli_reader, cli_writer):
         """Callback for client connections"""
         client_id = cli_writer.get_extra_info("peername")
@@ -76,6 +92,7 @@ class Server:
                 return
 
             data = data.decode()
+            print(data)
             parsed_json = json.loads(data)
             
             headers = parsed_json.get("headers")
@@ -101,8 +118,10 @@ class Server:
             
             break
     
-    def start(self):
-        server_coro = asyncio.start_server(self.client_connection_callback, "localhost", self.port, loop=self.loop)
+    def start(self, multicast=False):
+        host = self.host if not multicast else self.multicast_grp
+        server_coro = asyncio.start_server(self.client_connection_callback, host, self.port, loop=self.loop)
         
+        print(self.bot)
         self.bot.dispatch("ipc_ready")
         self.loop.run_until_complete(server_coro)
