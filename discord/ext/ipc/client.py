@@ -56,7 +56,3 @@ class Client:
                 return await writer.close()
             
             return data.decode("utf-8")
-    
-    def start(self):
-        """Start the multicast server"""
-        return self.multicast_server.start(True)
