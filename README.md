@@ -1,16 +1,25 @@
-### discord-ext-ipc
+discord-ext-ipc
+===============
 
-An IPC extension allowing for the communication between a [discord.py](https://discordpy.readthedocs.io/en/latest/) bot and an asynchronous web-framework (i.e. [Quart](https://pgjones.gitlab.io/quart/) or [aiohttp.web](https://docs.aiohttp.org/en/stable/web_quickstart.html))
+An IPC extension allowing for the communication between a discord.py bot and an asynchronous web-framework (i.e. Quart or aiohttp.web)
 
-## Installing
+Installation
+------------
 
-As with other extensions, instillation is through [git](https://git-scm.com)
+Installation can be complete through both PyPI and github
 
-```py
-python -m pip install -U git+https://github.com/lganwebb/discord-ext-ipc
+PyPI install:
+
+```sh
+    python -m pip install -U discord-ext-ipc
 ```
 
-## Basic Usage / Getting started
+```sh
+    python -m pip install -U git+https://github.com/lganwebb/discord-ext-ipc
+```
+
+Usage
+-----
 
 One of the most basic programs you can make is a simple guild counter web-page. An example using [Quart](https://pgjones.gitlab.io/quart/):
 

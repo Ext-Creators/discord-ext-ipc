@@ -1,8 +1,13 @@
 from setuptools import setup
+import re
 
 with open("README.md", "r") as ld:
     long_description = ld.read()
 
+version = ""
+with open("discord/ext/ipc/__init__.py") as f:
+    version = re.search(r"^__version__\s*=\s*[\'\"]([^\'\"]*)[\'\"]", f.read(), re.MULTILINE).group(1)
+    
 setup(
     name="discord-ext-ipc",
     author="lganwebb",

@@ -1,6 +1,9 @@
 import json
 import asyncio
 
+import socket
+import struct
+
 class IpcServerResponse:
     """Format the json data parsed into a nice object"""
 
