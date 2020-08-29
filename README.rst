@@ -10,7 +10,7 @@ Installation can be complete through github only:
 
 .. code-block:: sh
 
-    python -m pip install -U git+https://github.com/lganwebb/discord-ext-ipc
+    python -m pip install -U git+https://github.com/ext-creators/discord-ext-ipc
 
 
 Usage
