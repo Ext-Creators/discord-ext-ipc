@@ -11,12 +11,16 @@ Installation can be complete through both PyPI and github
 PyPI install:
 
 .. code-block:: sh
+
     python -m pip install -U discord-ext-ipc
+
 
 Git install:
 
 .. code-block:: sh
+
     python -m pip install -U git+https://github.com/lganwebb/discord-ext-ipc
+
 
 Usage
 -----
