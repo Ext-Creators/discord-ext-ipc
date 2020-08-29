@@ -6,16 +6,7 @@ An IPC extension allowing for the communication between a discord.py bot and an 
 Installation
 ------------
 
-Installation can be complete through both PyPI and github
-
-PyPI install:
-
-.. code-block:: sh
-
-    python -m pip install -U discord-ext-ipc
-
-
-Git install:
+Installation can be complete through github only:
 
 .. code-block:: sh
 
