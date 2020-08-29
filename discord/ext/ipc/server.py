@@ -11,12 +11,11 @@
     limitations under the License.
 """
 
-
 import json
 import asyncio
 
 import socket
-import struct
+import inspect
 
 class IpcServerResponse:
     """Format the json data parsed into a nice object"""
@@ -92,7 +91,6 @@ class Server:
                 return
 
             data = data.decode()
-            print(data)
             parsed_json = json.loads(data)
             
             headers = parsed_json.get("headers")
@@ -105,13 +103,20 @@ class Server:
             if token != self.secret_key:
                 response = {"error": "Invalid authorization token provided.", "status": 403}
             else:
-                endpoint = parsed_json.get("endpoint")
-                
-                if not endpoint or not self.endpoints.get(endpoint):
-                    response = {"error": 'No endpoint matching {} was found.'.format(endpoint), "status": 404}
+                if parsed_json.get("multicast") and parsed_json.get("multicast") is True:
+                    endpoints = {}
+                    for name, func in self.endpoints.items():
+                        endpoints[name] = {"func_name": func.__name__}
+
+                    response = {"multicast_grp": self.multicast_grp, "port": self.port, "endpoints": endpoints}
                 else:
-                    server_response = IpcServerResponse(parsed_json)
-                    response = await self.endpoints[endpoint](server_response)
+                    endpoint = parsed_json.get("endpoint")
+                    
+                    if not endpoint or not self.endpoints.get(endpoint):
+                        response = {"error": 'No endpoint matching {} was found.'.format(endpoint), "status": 404}
+                    else:
+                        server_response = IpcServerResponse(parsed_json)
+                        response = await self.endpoints[endpoint](server_response)
             
             writer.write(json.dumps(response).encode("utf-8"))
             await writer.drain()
@@ -121,7 +126,9 @@ class Server:
     def start(self, multicast=False):
         host = self.host if not multicast else self.multicast_grp
         server_coro = asyncio.start_server(self.client_connection_callback, host, self.port, loop=self.loop)
-        
-        print(self.bot)
+
         self.bot.dispatch("ipc_ready")
         self.loop.run_until_complete(server_coro)
+        
+        multicast_server = asyncio.start_server(self.client_connection_callback, host, 20000, loop=self.loop)
+        self.loop.run_until_complete(multicast_server)
