@@ -25,9 +25,10 @@ Git install:
 Usage
 -----
 
-One of the most basic programs you can make is a simple guild counter web-page. An example using [Quart](https://pgjones.gitlab.io/quart/):
+One of the most basic programs you can make is a simple guild counter web-page. An example using Quart:
 
 .. code-block:: py
+
     # BOT FILE
     import discord
     from discord.ext import commands
@@ -62,7 +63,9 @@ One of the most basic programs you can make is a simple guild counter web-page. 
         bot_ipc.start() # ipc.server.Server.start will begin the IPC
         bot.run("TOKEN") # run the bot as usual
 
+
 .. code-block:: py
+
     # WEB SERVER FILE
     from quart import Quart
     from client import Client
@@ -82,3 +85,5 @@ One of the most basic programs you can make is a simple guild counter web-page. 
 
     if __name__ == "__main__":
         app.run()
+
+For support join the `Ext-Creators Discord Server <https://discord.gg/h3q42Er>`_.
