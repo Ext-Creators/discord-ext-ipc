@@ -11,3 +11,8 @@ Changelog
 ------
 
 - Fixed import errors
+
+1.1.2a
+------
+
+- **discord.ext.ipc.client.Node(...).request(...)** now returns None if 'null' is received.
