@@ -88,4 +88,9 @@ class Client:
             
             break
         
-        return json.loads(data.decode("utf-8"))
+        to_ret = json.loads(data.decode("utf-8"))
+        
+        if to_ret == "null":
+            return None
+        
+        return to_ret
