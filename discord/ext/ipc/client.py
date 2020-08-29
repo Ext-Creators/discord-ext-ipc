@@ -16,7 +16,7 @@ import asyncio
 import json
 import socket
 
-from errors import *
+from .errors import *
 
 
 class Node:
