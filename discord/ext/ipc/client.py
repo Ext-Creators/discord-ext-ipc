@@ -68,29 +68,31 @@ class Client:
         """Make a request to the IPC server"""
         try:
             reader, writer = await asyncio.open_connection(self.host, port)
+
+            if kwargs.get("multicast") and kwargs.get("multicast") is True:
+                data = {"multicast": True, "data": {"ping": 1}, "headers": {"Authentication": self.secret_key}}
+            else:
+                data = {"endpoint": endpoint, "data": kwargs, "headers": {"Authentication": self.secret_key}}
+
+            writer.write(json.dumps(data).encode("utf-8"))
+            
+            await writer.drain()
+            
+            while True:
+                data = await reader.read()
+                
+                if not data:
+                    return await writer.close()
+                
+                break
+            
+            to_ret = json.loads(data.decode("utf-8"))
+            
+            if to_ret == "null":
+                return None
+            
+            await writer.close()
+
+            return to_ret
         except ConnectionRefusedError:
             raise ServerConnectionRefusedError("No server found for ({}, {}), or server isn't accepting connections.".format(self.host, port))
-        
-        if kwargs.get("multicast") and kwargs.get("multicast") is True:
-            data = {"multicast": True, "data": {"ping": 1}, "headers": {"Authentication": self.secret_key}}
-        else:
-            data = {"endpoint": endpoint, "data": kwargs, "headers": {"Authentication": self.secret_key}}
-
-        writer.write(json.dumps(data).encode("utf-8"))
-        
-        await writer.drain()
-        
-        while True:
-            data = await reader.read(1024)
-            
-            if not data:
-                return await writer.close()
-            
-            break
-        
-        to_ret = json.loads(data.decode("utf-8"))
-        
-        if to_ret == "null":
-            return None
-        
-        return to_ret

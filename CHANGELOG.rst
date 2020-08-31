@@ -16,3 +16,9 @@ Changelog
 ------
 
 - **discord.ext.ipc.client.Node(...).request(...)** now returns None if 'null' is received.
+
+1.1.3a
+------
+
+- The library will now close the writer object.
+- The library will read until EOF
