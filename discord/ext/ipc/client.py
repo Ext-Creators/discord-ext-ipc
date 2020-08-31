@@ -82,7 +82,7 @@ class Client:
                 data = await reader.read()
                 
                 if not data:
-                    return await writer.close()
+                    return writer.close()
                 
                 break
             
@@ -91,7 +91,7 @@ class Client:
             if to_ret == "null":
                 return None
             
-            await writer.close()
+            writer.close()
 
             return to_ret
         except ConnectionRefusedError:
