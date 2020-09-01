@@ -59,7 +59,7 @@ One of the most basic programs you can make is a simple guild counter web-page. 
 
     # WEB SERVER FILE
     from quart import Quart
-    from client import Client
+    from discord.ext.client import Client
 
     app = Quart(__name__)
     web_ipc = Client(secret_key="my_auth_token")
