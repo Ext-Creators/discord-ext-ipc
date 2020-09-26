@@ -80,6 +80,6 @@ One of the most basic programs you can make is a simple guild counter web-page. 
 Running
 -------
 
-To run the IPC Server, simply run your bot as normal. Once the `on_ipc_read` event has been dispatched, run your webserver.
+To run the IPC Server, simply run your bot as normal. Once the `on_ipc_readu` event has been dispatched, run your webserver.
 
 For support join the `Ext-Creators Discord Server <https://discord.gg/h3q42Er>`_.
