@@ -84,6 +84,7 @@ class Server:
         self.clients[client_id] = task
     
     async def client_task(self, reader, writer):
+        """Processes the client request"""
         while True:
             data = await reader.read(1024)
             
@@ -124,6 +125,7 @@ class Server:
             break
     
     def start(self, multicast=False):
+        """Start the IPC server"""
         host = self.host if not multicast else self.multicast_grp
         server_coro = asyncio.start_server(self.client_connection_callback, host, self.port, loop=self.loop)
 

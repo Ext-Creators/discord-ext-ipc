@@ -20,6 +20,8 @@ from .errors import *
 
 
 class Node:
+    """Base Node class returned when an IPC server is discovered."""
+    
     def __init__(self, client, data):
         self.client = client
         self._json = data
