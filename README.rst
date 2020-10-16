@@ -1,7 +1,7 @@
 discord-ext-ipc
 ===============
 
-An IPC extension allowing for the communication between a discord.py bot and an asynchronous web-framework (i.e. Quart or aiohttp.web)
+An IPC extension allowing for the communication between a discord.py bot and an asynchronous web-framework (i.e. Quart or aiohttp.web). Easily create discord bot dashboards within python.
 
 Installation
 ------------
