@@ -55,6 +55,9 @@ class Server:
         self.secret_key = secret_key
         
         self.multicast_grp = socket.gethostbyname(socket.gethostname())
+
+        self.main_server = None
+        self.multicast_server = None
     
     def route(self, name=None):
         """Used to register a coroutine as an endpoint"""
@@ -130,7 +133,12 @@ class Server:
         server_coro = asyncio.start_server(self.client_connection_callback, host, self.port, loop=self.loop)
 
         self.bot.dispatch("ipc_ready")
-        self.loop.run_until_complete(server_coro)
+        self.main_server = self.loop.create_task(server_coro)
         
         multicast_server = asyncio.start_server(self.client_connection_callback, host, 20000, loop=self.loop)
-        self.loop.run_until_complete(multicast_server)
+        self.multicast_server = self.loop.create_task(multicast_server)
+
+    def stop(self):
+        """Stop the IPC server"""
+        self.main_server.cancel()
+        self.multicast_server.cancel()
