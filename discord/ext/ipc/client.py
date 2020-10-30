@@ -54,11 +54,9 @@ class Client:
     
     async def discover(self):
         """Get the first node found on your network"""
-
         response = await self.request(None, 20000, multicast=True)
         
         if not response:
-            print("No node")
             return None
 
         node = Node(self, response)
@@ -80,12 +78,11 @@ class Client:
             
             await writer.drain()
             
+            data = b""
             while True:
-                data = await reader.read(1024)
-
-                if not data:
-                    writer.close()
-                    return await writer.wait_closed()
+                while not reader.at_eof():
+                    data += await reader.read(100)
+                    reader.feed_eof()
                 
                 break
             
