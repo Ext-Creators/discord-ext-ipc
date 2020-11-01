@@ -54,7 +54,10 @@ class Server:
         
         self.secret_key = secret_key
         
-        self.multicast_grp = socket.gethostbyname(socket.gethostname())
+        try:
+            self.multicast_grp = socket.gethostbyname(socket.gethostname())
+        except socket.gaierror:
+            self.multicast_grp = socket.gethostbyname("0.0.0.0")
     
     def route(self, name=None):
         """Used to register a coroutine as an endpoint"""
@@ -86,7 +89,13 @@ class Server:
     async def client_task(self, reader, writer):
         """Processes the client request"""
         while True:
-            data = await reader.read(1024)
+            data = b""
+            while True:
+                while not reader.at_eof():
+                    data += await reader.read(100)
+                    reader.feed_eof()
+                
+                break
             
             if data == b"":
                 return
