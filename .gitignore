@@ -9,3 +9,4 @@ __pycache__/
 # python test files
 test.py
 web-test.py
+cog.py

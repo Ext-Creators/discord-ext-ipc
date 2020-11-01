@@ -15,7 +15,18 @@ import json
 import asyncio
 
 import socket
-import inspect
+
+ROUTES = {}
+
+def route(name=None):
+    """Used to register a coroutine as an endpoint"""
+    def decorator(func):
+        if not name:
+            ROUTES[func.__name__] = func
+        else:
+            ROUTES[name] = func
+
+    return decorator
 
 class IpcServerResponse:
     """Format the json data parsed into a nice object"""
@@ -44,6 +55,8 @@ class Server:
 
     def __init__(self, bot, host, port, secret_key):
         self.bot = bot
+        self.bot._ipc = self
+
         self.loop = bot.loop
 
         self.port = port
@@ -68,6 +81,12 @@ class Server:
                 self.endpoints[name] = func
         
         return decorator
+    
+    def update_endpoints(self):
+        self.endpoints = {
+            **self.endpoints,
+            **ROUTES
+        }
         
     def client_connection_callback(self, cli_reader, cli_writer):
         """Callback for client connections"""
@@ -88,6 +107,8 @@ class Server:
     
     async def client_task(self, reader, writer):
         """Processes the client request"""
+        self.update_endpoints()
+
         while True:
             data = b""
             while True:
@@ -126,7 +147,15 @@ class Server:
                         response = {"error": 'No endpoint matching {} was found.'.format(endpoint), "status": 404}
                     else:
                         server_response = IpcServerResponse(parsed_json)
-                        response = await self.endpoints[endpoint](server_response)
+                        
+                        attempted_cls = self.bot.cogs.get(self.endpoints[endpoint].__qualname__.split(".")[0])
+
+                        if attempted_cls:
+                            args = (attempted_cls, server_response)
+                        else:
+                            args = (server_response)
+
+                        response = await self.endpoints[endpoint](*args)
             
             writer.write(json.dumps(response).encode("utf-8"))
             await writer.drain()
@@ -135,6 +164,8 @@ class Server:
     
     def start(self, multicast=False):
         """Start the IPC server"""
+        self.update_endpoints()
+
         host = self.host if not multicast else self.multicast_grp
         server_coro = asyncio.start_server(self.client_connection_callback, host, self.port, loop=self.loop)
 
