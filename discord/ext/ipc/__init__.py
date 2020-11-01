@@ -12,10 +12,10 @@
 """
 from collections import namedtuple
 
-__version__ = "1.1.3a"
+__version__ = "1.1.4a"
 
 _VersionInfo = namedtuple("_VersionInfo", "major minor micro releaselevel serial")
-version_info = _VersionInfo(major=1, minor=1, micro=2, releaselevel="alpha", serial=0)
+version_info = _VersionInfo(major=1, minor=1, micro=4, releaselevel="alpha", serial=0)
 
 from .client import Client
 from .server import Server
