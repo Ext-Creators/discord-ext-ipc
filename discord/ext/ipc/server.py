@@ -111,12 +111,10 @@ class Server:
 
         while True:
             data = b""
-            while True:
-                while not reader.at_eof():
-                    data += await reader.read(100)
-                    reader.feed_eof()
-                
-                break
+
+            while not reader.at_eof():
+                data += await reader.read(100)
+                reader.feed_eof()
             
             if data == b"":
                 return

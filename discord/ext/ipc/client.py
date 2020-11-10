@@ -79,12 +79,10 @@ class Client:
             await writer.drain()
             
             data = b""
-            while True:
-                while not reader.at_eof():
-                    data += await reader.read(100)
-                    reader.feed_eof()
-                
-                break
+
+            while not reader.at_eof():
+                data += await reader.read(100)
+                reader.feed_eof()
             
             to_ret = json.loads(data.decode("utf-8"))
             
