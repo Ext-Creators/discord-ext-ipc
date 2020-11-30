@@ -11,11 +11,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-
     - name: Lint
       uses: github/super-linter@v3
       env:
