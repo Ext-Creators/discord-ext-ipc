@@ -1,12 +1,7 @@
-# python PyPI files / dirs
-*.egg-info/
-build/
-dist/
-
-# pycache
+# python cache
 __pycache__/
 
-# python test files
-test.py
-web-test.py
-cog.py
+# python package-index
+/build/
+/dist/
+/*.egg-info/
