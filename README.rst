@@ -1,16 +1,40 @@
-discord-ext-ipc
-===============
+.. raw:: html
 
-An IPC extension allowing for the communication between a discord.py bot and an asynchronous web-framework (i.e. Quart or aiohttp.web). Easily create discord bot dashboards within python.
+    <p align="center">
+        <a href="https://github.com/Ext-Creators/discord-ext-ipc/actions?query=workflow%3AAnalyze+event%3Apush">
+            <img alt="Analyze Status"
+                 src="https://github.com/Ext-Creators/discord-ext-ipc/workflows/Analyze/badge.svg?event=push" />
+        </a>
+
+        <a href="https://github.com/Ext-Creators/discord-ext-ipc/actions?query=workflow%3ABuild+event%3Apush">
+            <img alt="Build Status"
+                 src="https://github.com/Ext-Creators/discord-ext-ipc/workflows/Build/badge.svg?event=push" />
+        </a>
+
+        <a href="https://github.com/Ext-Creators/discord-ext-ipc/actions?query=workflow%3ALint+event%3Apush">
+            <img alt="Lint Status"
+                 src="https://github.com/Ext-Creators/discord-ext-ipc/workflows/Lint/badge.svg?event=push" />
+        </a>
+    </p>
+
+----------
+
+.. raw:: html
+
+    <h1 align="center">discord-ext-ipc</h1>
+    <p align="center">A discord.py extension for inter-process communication.</p>
+
 
 Installation
 ------------
 
-Installation can be complete through github only:
-
 .. code-block:: sh
 
-    python -m pip install -U git+https://github.com/ext-creators/discord-ext-ipc
+    # Windows
+    py -3 -m pip install --upgrade discord-ext-ipc
+
+    # Linux
+    python3 -m pip install --upgrade discord-ext-ipc
 
 
 Usage
@@ -31,11 +55,11 @@ One of the most basic programs you can make is a simple guild counter web-page. 
         """Main bot class"""
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-        
+
         async def on_ipc_ready(self):
             """Event dispatched upon the IPC being ready"""
             print("IPC ready")
-        
+
         async def on_ready(self):
             """Event dispatched upon our discord bot being ready"""
             print("Bot ready")
