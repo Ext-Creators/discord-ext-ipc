@@ -86,7 +86,7 @@ One of the most basic programs you can make is a simple guild counter web-page. 
     from discord.ext.ipc import Client
 
     app = Quart(__name__)
-    web_ipc = Client(secret_key="my_auth_token")
+    web_ipc = Client(secret_key="secret_key")
 
     @app.route("/")
     async def show_guilds():
