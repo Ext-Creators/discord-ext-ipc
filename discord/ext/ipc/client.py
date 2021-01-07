@@ -15,8 +15,6 @@ import asyncio
 import json
 import websockets
 
-from .errors import *
-
 class WebsocketClient:
     def __init__(self, host: str = "localhost", port: int = 10000, loop = None):
         self.loop = loop or asyncio.get_event_loop()

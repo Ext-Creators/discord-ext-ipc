@@ -11,4 +11,4 @@ test.py
 web-test.py
 cog.py
 
-venv/*
+venv/
