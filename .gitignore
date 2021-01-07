@@ -10,3 +10,5 @@ __pycache__/
 test.py
 web-test.py
 cog.py
+
+venv/*

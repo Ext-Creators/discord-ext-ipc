@@ -11,87 +11,53 @@
     limitations under the License.
 """
 
-
 import asyncio
 import json
-import socket
+import websockets
 
 from .errors import *
 
+class WebsocketClient:
+    def __init__(self, host: str = "localhost", port: int = 10000, loop = None):
+        self.loop = loop or asyncio.get_event_loop()
 
-class Node:
-    """Base Node class returned when an IPC server is discovered."""
-    
-    def __init__(self, client, data):
-        self.client = client
-        self._json = data
-        
-        self.ip = data.get("multicast_grp")
-        self.port = data.get("port")
-        self.endpoints = data.get("endpoints")
-    
-    def get_json(self):
-        """Convert object to json"""
-        return self._json
+        self.host = host
+        self.port = port
+
+        self.uri = "ws://{}:{}".format(self.host, self.port)
+
+        self.ws = None
+
+        self.loop.create_task(self.connect_ws())
+
+    async def connect_ws(self):
+        """Connect to the Websocket"""
+        self.ws = await websockets.connect(self.uri)
+
+    async def send(self, data):
+        """Send data over the websocket"""
+        if not self.ws:
+            await self.connect_ws()
+
+        await self.ws.send(data)
+
+        response = await self.wait_response()
+
+        return response
 
     async def request(self, endpoint, **kwargs):
-        if endpoint not in self.endpoints.keys():
-            raise NoEndpointFoundError("Endpoint \"{}\" not found".format(endpoint))
-        
-        return await self.client.request(endpoint, self.port, **kwargs)
-    
-    def __str__(self):
-        return str(self.get_json())
-
-class Client:
-    """Main client class, used for delivering data from the web server to the bot"""
-
-    def __init__(self, *, host="localhost", secret_key=None):
-        self.host = host
-        self.secret_key = secret_key
-        
-        self.nodes = {}
-    
-    async def discover(self):
-        """Get the first node found on your network"""
-        response = await self.request(None, 20000, multicast=True)
-        
-        if not response:
-            return None
-
-        node = Node(self, response)
-        self.nodes[node.port] = node
-
-        return node
-        
-    async def request(self, endpoint, port, **kwargs):
         """Make a request to the IPC server"""
+        fmt = {"endpoint": endpoint, "data": kwargs}
+
+        return await self.send(json.dumps(fmt))
+
+    async def wait_response(self):
+        """Await a response from the Websocket server"""
+        data = await self.ws.recv()
+
         try:
-            reader, writer = await asyncio.open_connection(self.host, port)
+            data = json.loads(data)
+        except TypeError:
+            pass
 
-            if kwargs.get("multicast") and kwargs.get("multicast") is True:
-                data = {"multicast": True, "data": {"ping": 1}, "headers": {"Authentication": self.secret_key}}
-            else:
-                data = {"endpoint": endpoint, "data": kwargs, "headers": {"Authentication": self.secret_key}}
-
-            writer.write(json.dumps(data).encode("utf-8"))
-            
-            await writer.drain()
-            
-            data = b""
-
-            while not reader.at_eof():
-                data += await reader.read(100)
-                reader.feed_eof()
-            
-            to_ret = json.loads(data.decode("utf-8"))
-            
-            if to_ret == "null":
-                return None
-            
-            writer.close()
-            await writer.wait_closed()
-
-            return to_ret
-        except ConnectionRefusedError:
-            raise ServerConnectionRefusedError("No server found for ({}, {}), or server isn't accepting connections.".format(self.host, port))
+        return data

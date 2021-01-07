@@ -12,11 +12,12 @@
 """
 
 import json
-import asyncio
+import websockets
 
-import socket
+from .errors import *
 
 ROUTES = {}
+
 
 def route(name=None):
     """Used to register a coroutine as an endpoint"""
@@ -27,6 +28,7 @@ def route(name=None):
             ROUTES[name] = func
 
     return decorator
+
 
 class IpcServerResponse:
     """Format the json data parsed into a nice object"""
@@ -50,28 +52,19 @@ class IpcServerResponse:
     def __str__(self):
         return self.__repr__()
 
+
 class Server:
-    """Main server class"""
-
-    def __init__(self, bot, host, port, secret_key):
+    def __init__(self, bot, host: str = "localhost", port: int = 10000, secret_key: str = None):
         self.bot = bot
-        self.bot._ipc = self
-
         self.loop = bot.loop
 
-        self.port = port
         self.host = host
-        
-        self.clients = {}
+        self.port = port
+
+        self._server_coro = None
+
         self.endpoints = {}
-        
-        self.secret_key = secret_key
-        
-        try:
-            self.multicast_grp = socket.gethostbyname(socket.gethostname())
-        except socket.gaierror:
-            self.multicast_grp = socket.gethostbyname("0.0.0.0")
-    
+
     def route(self, name=None):
         """Used to register a coroutine as an endpoint"""
         def decorator(func):
@@ -79,96 +72,60 @@ class Server:
                 self.endpoints[func.__name__] = func
             else:
                 self.endpoints[name] = func
-        
+
         return decorator
-    
+
     def update_endpoints(self):
         self.endpoints = {
             **self.endpoints,
             **ROUTES
         }
-        
-    def client_connection_callback(self, cli_reader, cli_writer):
-        """Callback for client connections"""
-        client_id = cli_writer.get_extra_info("peername")
 
-        def client_cleanup(future):
-            try:
-                future.result()
-            except Exception:
-                pass
-        
-            del self.clients[client_id]
-        
-        task = asyncio.ensure_future(self.client_task(cli_reader, cli_writer))
-        task.add_done_callback(client_cleanup)
-        
-        self.clients[client_id] = task
-    
-    async def client_task(self, reader, writer):
-        """Processes the client request"""
-        self.update_endpoints()
+        ROUTES = {}
 
-        while True:
-            data = b""
+    async def handle_accept(self, websocket, _):
+        async for message in websocket:
+            request = json.loads(message)
+            endpoint = request.get("endpoint")
 
-            while not reader.at_eof():
-                data += await reader.read(100)
-                reader.feed_eof()
-            
-            if data == b"":
-                return
-
-            data = data.decode()
-            parsed_json = json.loads(data)
-            
-            headers = parsed_json.get("headers")
-            
-            if not headers or not headers.get("Authentication"):
-                response = {"error": "No authentication provided.", "status": 403}
-            
-            token = headers.get("Authentication")
-            
-            if token != self.secret_key:
-                response = {"error": "Invalid authorization token provided.", "status": 403}
+            if not endpoint or endpoint not in self.endpoints:
+                response = {"error": "Invalid or no endpoint given.", "code": 400}
             else:
-                if parsed_json.get("multicast") and parsed_json.get("multicast") is True:
-                    endpoints = {}
-                    for name, func in self.endpoints.items():
-                        endpoints[name] = {"func_name": func.__name__}
+                server_response = IpcServerResponse(request)
+                attempted_cls = self.bot.cogs.get(self.endpoints[endpoint].__qualname__.split(".")[0])
 
-                    response = {"multicast_grp": self.multicast_grp, "port": self.port, "endpoints": endpoints}
+                if attempted_cls:
+                    arguments = (attempted_cls, server_response)
                 else:
-                    endpoint = parsed_json.get("endpoint")
-                    
-                    if not endpoint or not self.endpoints.get(endpoint):
-                        response = {"error": 'No endpoint matching {} was found.'.format(endpoint), "status": 404}
-                    else:
-                        server_response = IpcServerResponse(parsed_json)
-                        
-                        attempted_cls = self.bot.cogs.get(self.endpoints[endpoint].__qualname__.split(".")[0])
+                    arguments = (server_response,)
 
-                        if attempted_cls:
-                            args = (attempted_cls, server_response)
-                        else:
-                            args = (server_response)
+                try:
+                    ret = await self.endpoints[endpoint](*arguments)
+                    response = ret
+                except Exception as error:
+                    self.bot.dispatch("ipc_error", error)
 
-                        response = await self.endpoints[endpoint](*args)
-            
-            writer.write(json.dumps(response).encode("utf-8"))
-            await writer.drain()
-            
-            break
-    
-    def start(self, multicast=False):
-        """Start the IPC server"""
-        self.update_endpoints()
+                    response = {"error": "IPC route raised error of type {}".format(type(error).__name__), "code": 500}
 
-        host = self.host if not multicast else self.multicast_grp
-        server_coro = asyncio.start_server(self.client_connection_callback, host, self.port, loop=self.loop)
+            try:
+                await websocket.send(json.dumps(response))
+            except TypeError as error:
+                if str(error).startswith("Object of type") and str(error).endswith("is not JSON serializable"):
+                    error_response = "IPC route returned values which are not able to be sent over sockets." \
+                                     " If you are trying to send a discord.py object," \
+                                     " please only send the data you need."
 
-        self.bot.dispatch("ipc_ready")
-        self.loop.run_until_complete(server_coro)
-        
-        multicast_server = asyncio.start_server(self.client_connection_callback, host, 20000, loop=self.loop)
-        self.loop.run_until_complete(multicast_server)
+                    response = {
+                        "error": error_response,
+                        "code": 500
+                    }
+
+                    await websocket.send(json.dumps(response))
+
+                    raise JSONEncodeError(error_response)
+
+    def start(self):
+        """Start teh IPC server"""
+        self._server_coro = websockets.serve(self.handle_accept, self.host, self.port)
+
+        self.loop.run_until_complete(self._server_coro)

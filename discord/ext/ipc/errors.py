@@ -5,3 +5,7 @@ class NoEndpointFoundError(Exception):
 class ServerConnectionRefusedError(Exception):
     """Raised upon a server refusing to connect / not being found"""
     pass
+
+class JSONEncodeError(Exception):
+    """Raise upon un-serializable objects are given to the IPC"""
+    pass
