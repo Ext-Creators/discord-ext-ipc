@@ -65,8 +65,6 @@ class Server:
 
         self.endpoints = {}
 
-        self.bot.dispatch("ipc_ready")
-
     def route(self, name=None):
         """Used to register a coroutine as an endpoint"""
         def decorator(func):
@@ -78,6 +76,8 @@ class Server:
         return decorator
 
     def update_endpoints(self):
+        global ROUTES
+
         self.endpoints = {
             **self.endpoints,
             **ROUTES
@@ -86,6 +86,8 @@ class Server:
         ROUTES = {}
 
     async def handle_accept(self, websocket, _):
+        self.update_endpoints()
+
         async for message in websocket:
             request = json.loads(message)
             endpoint = request.get("endpoint")
@@ -128,6 +130,8 @@ class Server:
 
     def start(self):
         """Start teh IPC server"""
+        print("Starting IPC on ws://{}:{}".format(self.host, self.port))
+
         self._server_coro = websockets.serve(self.handle_accept, self.host, self.port)
 
         self.loop.run_until_complete(self._server_coro)
