@@ -65,6 +65,8 @@ class Server:
 
         self.endpoints = {}
 
+        self.bot.dispatch("ipc_ready")
+
     def route(self, name=None):
         """Used to register a coroutine as an endpoint"""
         def decorator(func):
