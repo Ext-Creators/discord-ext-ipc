@@ -16,11 +16,13 @@ import json
 import websockets
 
 class Client:
-    def __init__(self, host: str = "localhost", port: int = 10000, loop = None):
+    def __init__(self, host: str = "localhost", port: int = 10000, loop = None, secret_key: str = None):
         self.loop = loop or asyncio.get_event_loop()
 
         self.host = host
         self.port = port
+
+        self.secret_key = secret_key
 
         self.uri = "ws://{}:{}".format(self.host, self.port)
 
@@ -45,7 +47,7 @@ class Client:
 
     async def request(self, endpoint, **kwargs):
         """Make a request to the IPC server"""
-        fmt = {"endpoint": endpoint, "data": kwargs}
+        fmt = {"endpoint": endpoint, "data": kwargs, "headers": {"secret_key": self.secret_key}}
 
         return await self.send(json.dumps(fmt))
 

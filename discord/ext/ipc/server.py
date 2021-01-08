@@ -14,7 +14,7 @@
 import json
 import websockets
 
-from .errors import *
+from errors import *
 
 ROUTES = {}
 
@@ -58,6 +58,8 @@ class Server:
         self.bot = bot
         self.loop = bot.loop
 
+        self.secret_key = secret_key
+
         self.host = host
         self.port = port
 
@@ -92,24 +94,29 @@ class Server:
             request = json.loads(message)
             endpoint = request.get("endpoint")
 
-            if not endpoint or endpoint not in self.endpoints:
-                response = {"error": "Invalid or no endpoint given.", "code": 400}
+            headers = request.get("headers")
+
+            if not headers or headers.get("secret_key") != self.secret_key:
+                response = {"error": "Invalid or no token provided.", "code": 403}
             else:
-                server_response = IpcServerResponse(request)
-                attempted_cls = self.bot.cogs.get(self.endpoints[endpoint].__qualname__.split(".")[0])
-
-                if attempted_cls:
-                    arguments = (attempted_cls, server_response)
+                if not endpoint or endpoint not in self.endpoints:
+                    response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
-                    arguments = (server_response,)
+                    server_response = IpcServerResponse(request)
+                    attempted_cls = self.bot.cogs.get(self.endpoints[endpoint].__qualname__.split(".")[0])
 
-                try:
-                    ret = await self.endpoints[endpoint](*arguments)
-                    response = ret
-                except Exception as error:
-                    self.bot.dispatch("ipc_error", error)
+                    if attempted_cls:
+                        arguments = (attempted_cls, server_response)
+                    else:
+                        arguments = (server_response,)
 
-                    response = {"error": "IPC route raised error of type {}".format(type(error).__name__), "code": 500}
+                    try:
+                        ret = await self.endpoints[endpoint](*arguments)
+                        response = ret
+                    except Exception as error:
+                        self.bot.dispatch("ipc_error", error)
+
+                        response = {"error": "IPC route raised error of type {}".format(type(error).__name__), "code": 500}
 
             try:
                 await websocket.send(json.dumps(response))
