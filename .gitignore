@@ -1,16 +1,15 @@
 # python cache
 __pycache__/
 
-<<<<<<< HEAD
 # python test files
 test.py
 web-test.py
 cog.py
 
 venv/
-=======
+.idea/
+
 # python package-index
 /build/
 /dist/
 /*.egg-info/
->>>>>>> 0c0025b9a996b16b86e8cb35cf31b25c8453ae7a
