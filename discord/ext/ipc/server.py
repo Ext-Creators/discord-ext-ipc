@@ -12,11 +12,9 @@
 """
 
 import json
-import typing
 import websockets
-import aiohttp.web
 
-from errors import *
+from .errors import *
 
 ROUTES = {}
 

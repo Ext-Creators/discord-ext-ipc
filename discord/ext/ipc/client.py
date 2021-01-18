@@ -16,7 +16,7 @@ import json
 import typing
 import aiohttp
 
-from errors import *
+from .errors import *
 
 
 class Client:
