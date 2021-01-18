@@ -1,0 +1,56 @@
+name: Stale
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  issue_comment:
+    types: [created]
+
+jobs:
+  stale:
+    if: github.event_name == 'schedule'
+
+    name: Mark as stale
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Stale
+      uses: actions/stale@v3
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        days-before-stale: 30
+        days-before-close: 14
+        exempt-issue-labels: A:backlog
+        stale-issue-label: A:stale
+        stale-issue-message: |-
+          This issue has been marked as stale due to its inactivity and will be closed in 14 days.
+
+          If you believe the issue should remain open, remove the `A:stale` label or add a comment.
+          If you believe the issue will continue to be inactive but should remain open, add the `A:backlog` label.
+
+        exempt-pr-labels: A:backlog
+        stale-pr-label: A:stale
+        stale-pr-message: |-
+          This pull request has been marked as stale due to its inactivity and will be closed in 14 days.
+
+          If you believe the pull request should remain open, remove the `A:stale` label or add a comment.
+          If you believe the pull request will continue to be inactive but should remain open, add the `A:backlog` label.
+
+  unstale:
+    if: github.event_name == 'issue_comment' && contains(github.event.issue.labels.*.name, 'A:stale') && github.event.issue.user.type != 'Bot'
+
+    name: Unmark as stale
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Unstale
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |-
+          github.issues.removeLabel({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            name: 'A:stale'
+          })

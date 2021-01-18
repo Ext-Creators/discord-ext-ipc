@@ -17,7 +17,13 @@ class MyBot(commands.Bot):
         """Called upon the IPC Server being ready"""
         print("Ipc is ready.")
 
+    async def on_ipc_error(self, endpoint, error):
+        """Called upon an error being raised within an IPC route"""
+        print(endpoint, "raised", error)
+
+
 my_bot = MyBot(command_prefix="!", intents=discord.Intents.all())
+
 
 if __name__ == "__main__":
     my_bot.ipc.start() # start the IPC Server
