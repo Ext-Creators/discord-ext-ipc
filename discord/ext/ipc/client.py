@@ -20,7 +20,18 @@ from .errors import *
 
 
 class Client:
+    """Handles webserver side requests to the bot process.
+
+    :param host: The IP or host of the IPC server, defaults to localhost
+    :type host: ``str``, optional
+    :param port: The port of the IPC server. If not supplied the port will be found automatically, defaults to None
+    :type port: ``int``, optional
+    :param secret_key: The secret key for your IPC server. Must match the server secret_key or requests will not go ahead, defaults to None
+    :type secret_key: ``Union[str, bytes]``, optional
+    """
+
     def __init__(self, host: str = "localhost", port: int = None, secret_key: typing.Union[str, bytes] = None):
+        """Constructor"""
         self.loop = asyncio.get_event_loop() or asyncio.new_event_loop()
 
         self.secret_key = secret_key
@@ -35,10 +46,12 @@ class Client:
 
         self.loop.run_until_complete(self.init_sock())
 
-        self.reconnect_interval = 5
-
     async def init_sock(self):
-        """Initialise the WebSocket"""
+        """Attempts to connect to the server
+
+        :return: The websocket connection to the server
+        :rtype: ``Websocket``
+        """
         self.session = aiohttp.ClientSession()
 
         if not self.port:
@@ -55,8 +68,15 @@ class Client:
         self.websocket = await self.session.ws_connect(f"ws://{self.host}:{self.port}", autoping=False)
         print(f"Client connected to ws://{self.host}:{self.port}")
 
+        return self.websocket
+
     async def request(self, endpoint: str, **kwargs):
-        """Send a request to the server"""
+        """Make a request to the IPC server process.
+
+        :param endpoint: The endpoint to request on the server
+        :type endpoint: str
+        :param **kwargs: The data to send to the endpoint
+        :type **kwargs: ``Any``, optional"""
         fmt = {"endpoint": endpoint, "data": kwargs, "headers": {"Authorization": self.secret_key}}
 
         await self.websocket.send_str(json.dumps(fmt))

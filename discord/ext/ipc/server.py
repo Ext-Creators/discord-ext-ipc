@@ -54,7 +54,8 @@ class IpcServerResponse:
 
 
 class Server:
-    def __init__(self, bot, host: str = "localhost", port: int = 8765, secret_key: str = None, dont_multicast: bool = False):
+    def __init__(self, bot, host: str = "localhost", port: int = 8765, secret_key: str = None,
+                 dont_multicast: bool = False):
         self.bot = bot
         self.loop = bot.loop
 
@@ -119,7 +120,8 @@ class Server:
                     except Exception as error:
                         self.bot.dispatch("ipc_error", endpoint, error)
 
-                        response = {"error": "IPC route raised error of type {}".format(type(error).__name__), "code": 500}
+                        response = {"error": "IPC route raised error of type {}".format(type(error).__name__),
+                                    "code": 500}
 
             try:
                 await websocket.send(json.dumps(response))
@@ -156,9 +158,9 @@ class Server:
         """Start teh IPC server"""
         print("Starting IPC on ws://{}:{}".format(self.host, self.port))
 
-        self._server_coro = websockets.serve(self.handle_accept, self.host, self.port, ping_interval=None)
+        self._server_coro = websockets.serve(self.handle_accept, self.host, self.port)
         self.loop.run_until_complete(self._server_coro)
 
         if self.do_multicast:
-            self._multicast_server = websockets.serve(self.handle_multicast, self.host, 20000, ping_interval=None)
+            self._multicast_server = websockets.serve(self.handle_multicast, self.host, 20000)
             self.loop.run_until_complete(self._multicast_server)
