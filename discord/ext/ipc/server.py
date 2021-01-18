@@ -12,7 +12,9 @@
 """
 
 import json
+import typing
 import websockets
+import aiohttp.web
 
 from errors import *
 
@@ -54,7 +56,7 @@ class IpcServerResponse:
 
 
 class Server:
-    def __init__(self, bot, host: str = "localhost", port: int = 10000, secret_key: str = None):
+    def __init__(self, bot, host: str = "localhost", port: int = 8765, secret_key: str = None, dont_multicast: bool = False):
         self.bot = bot
         self.loop = bot.loop
 
@@ -64,6 +66,9 @@ class Server:
         self.port = port
 
         self._server_coro = None
+        self._multicast_server = None
+
+        self.do_multicast = not dont_multicast
 
         self.endpoints = {}
 
@@ -96,7 +101,7 @@ class Server:
 
             headers = request.get("headers")
 
-            if not headers or headers.get("secret_key") != self.secret_key:
+            if not headers or headers.get("Authorization") != self.secret_key:
                 response = {"error": "Invalid or no token provided.", "code": 403}
             else:
                 if not endpoint or endpoint not in self.endpoints:
@@ -114,7 +119,7 @@ class Server:
                         ret = await self.endpoints[endpoint](*arguments)
                         response = ret
                     except Exception as error:
-                        self.bot.dispatch("ipc_error", error)
+                        self.bot.dispatch("ipc_error", endpoint, error)
 
                         response = {"error": "IPC route raised error of type {}".format(type(error).__name__), "code": 500}
 
@@ -135,10 +140,27 @@ class Server:
 
                     raise JSONEncodeError(error_response)
 
+    async def handle_multicast(self, websocket, _):
+        """Handle multicast requests"""
+        async for message in websocket:
+            request = json.loads(message)
+
+            headers = request.get("headers")
+
+            if not headers or headers.get("Authorization") != self.secret_key:
+                response = {"error": "Invalid or no token provided.", "code": 403}
+            else:
+                response = {"message": "Connection success", "port": self.port, "code": 200}
+
+            await websocket.send(json.dumps(response))
+
     def start(self):
         """Start teh IPC server"""
         print("Starting IPC on ws://{}:{}".format(self.host, self.port))
 
-        self._server_coro = websockets.serve(self.handle_accept, self.host, self.port)
-
+        self._server_coro = websockets.serve(self.handle_accept, self.host, self.port, ping_interval=None)
         self.loop.run_until_complete(self._server_coro)
+
+        if self.do_multicast:
+            self._multicast_server = websockets.serve(self.handle_multicast, self.host, 20000, ping_interval=None)
+            self.loop.run_until_complete(self._multicast_server)

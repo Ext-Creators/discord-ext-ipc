@@ -1,2 +1,3 @@
 discord.py>=1.4.1
-websockets
+aiohttp
+json

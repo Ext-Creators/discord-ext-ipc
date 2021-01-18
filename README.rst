@@ -3,6 +3,8 @@ discord-ext-ipc
 
 An IPC extension allowing for the communication between a discord.py bot and an asynchronous web-framework (i.e. Quart or aiohttp.web). Easily create discord bot dashboards within python.
 
+For support join the `Ext-Creators Discord Server <https://discord.gg/h3q42Er>`_.
+
 Installation
 ------------
 
@@ -35,15 +37,17 @@ One of the most basic programs you can make is a simple guild counter web-page. 
         async def on_ipc_ready(self):
             """Event dispatched upon the IPC being ready"""
             print("IPC ready")
+
+        async def on_ipc_error(self, endpoint, error):
+            """Event dispatched upon an error being raised within an IPC route"""
+            print(endpoint, "raised", error)
         
         async def on_ready(self):
             """Event dispatched upon our discord bot being ready"""
             print("Bot ready")
 
     bot = Bot(command_prefix="!", case_insensitive=True)
-    bot_ipc = Server(bot, "localhost", 8765, "secret_key")
-
-    # ipc.server.Server takes four arguments: the bot object, the port to run the IPC on, and a secret key used to authenticate client connections (seen in the web server file).
+    bot_ipc = Server(bot, secret_key="secret_key")
 
     @bot_ipc.route() # if no name is supplied in ipc.server.Server.route, the function name will become the route name.
     async def get_guild_count(data):
@@ -62,17 +66,13 @@ One of the most basic programs you can make is a simple guild counter web-page. 
     from discord.ext.ipc import Client
 
     app = Quart(__name__)
-    web_ipc = Client(secret_key="my_auth_token")
+    web_ipc = Client(secret_key="secret_key")
 
     @app.route("/")
     async def show_guilds():
-        guild_count = await app.ipc_node.request("get_guild_count") # Make a request to get the bot's IPC get_guild_count route.
+        guild_count = await web_ipc.request("get_guild_count") # Make a request to get the bot's IPC get_guild_count route.
 
         return str(guild_count) # return the data sent to us.
-
-    @app.before_first_request
-    async def before():
-        app.ipc_node = await web_ipc.discover() # discover IPC Servers on your network
 
     if __name__ == "__main__":
         app.run()
@@ -81,5 +81,3 @@ Running
 -------
 
 To run the IPC Server, simply run your bot as normal. Once the `on_ipc_ready` event has been dispatched, run your webserver.
-
-For support join the `Ext-Creators Discord Server <https://discord.gg/h3q42Er>`_.

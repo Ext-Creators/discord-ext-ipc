@@ -13,51 +13,56 @@
 
 import asyncio
 import json
-import websockets
+import typing
+import aiohttp
+
+from errors import *
+
 
 class Client:
-    def __init__(self, host: str = "localhost", port: int = 10000, loop = None, secret_key: str = None):
-        self.loop = loop or asyncio.get_event_loop()
+    def __init__(self, host: str = "localhost", port: int = None, secret_key: typing.Union[str, bytes] = None):
+        self.loop = asyncio.get_event_loop() or asyncio.new_event_loop()
+
+        self.secret_key = secret_key
 
         self.host = host
         self.port = port
 
-        self.secret_key = secret_key
+        self.session = None
 
-        self.uri = "ws://{}:{}".format(self.host, self.port)
+        self.websocket = None
+        self.multicast = None
 
-        self.ws = None
+        self.loop.run_until_complete(self.init_sock())
 
-        self.loop.create_task(self.connect_ws())
+        self.reconnect_interval = 5
 
-    async def connect_ws(self):
-        """Connect to the Websocket"""
-        self.ws = await websockets.connect(self.uri)
+    async def init_sock(self):
+        """Initialise the WebSocket"""
+        self.session = aiohttp.ClientSession()
 
-    async def send(self, data):
-        """Send data over the websocket"""
-        if not self.ws:
-            await self.connect_ws()
+        if not self.port:
+            self.multicast = await self.session.ws_connect(f"ws://{self.host}:20000", autoping=False)
+            await self.multicast.send_str(json.dumps({"connect": True, "headers": {"Authorization": self.secret_key}}))
+            recv = await self.multicast.receive()
 
-        await self.ws.send(data)
+            if recv.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED):
+                raise NotConnected("Multicast server connection failed.")
 
-        response = await self.wait_response()
+            port_data = json.loads(recv.data)
+            self.port = port_data["port"]
 
-        return response
+        self.websocket = await self.session.ws_connect(f"ws://{self.host}:{self.port}", autoping=False)
+        print(f"Client connected to ws://{self.host}:{self.port}")
 
-    async def request(self, endpoint, **kwargs):
-        """Make a request to the IPC server"""
-        fmt = {"endpoint": endpoint, "data": kwargs, "headers": {"secret_key": self.secret_key}}
+    async def request(self, endpoint: str, **kwargs):
+        """Send a request to the server"""
+        fmt = {"endpoint": endpoint, "data": kwargs, "headers": {"Authorization": self.secret_key}}
 
-        return await self.send(json.dumps(fmt))
+        await self.websocket.send_str(json.dumps(fmt))
+        recv = await self.websocket.receive()
 
-    async def wait_response(self):
-        """Await a response from the Websocket server"""
-        data = await self.ws.recv()
+        if recv.type == aiohttp.WSMsgType.CLOSED:
+            return {"error": "IPC Server Unreachable, restart client process.", "code": 500}
 
-        try:
-            data = json.loads(data)
-        except TypeError:
-            pass
-
-        return data
+        return json.loads(recv.data)
