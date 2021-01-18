@@ -5,7 +5,7 @@ class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.ipc = ipc.Server(self, "localhost", 8765, "my_secret_key") # create our IPC Server
+        self.ipc = ipc.Server(self, secret_key="my_secret_key") # create our IPC Server
 
         self.load_extension("cogs.ipc") # load the IPC Route cog
     
