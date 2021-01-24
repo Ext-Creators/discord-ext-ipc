@@ -1,7 +1,3 @@
-<<<<<<< HEAD
 aiohttp
 websockets
-setuptools
-=======
 discord.py>=1.4.1
->>>>>>> 0c0025b9a996b16b86e8cb35cf31b25c8453ae7a
