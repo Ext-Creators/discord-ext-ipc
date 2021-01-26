@@ -1,7 +1,6 @@
 # python cache
 __pycache__/
 
-
 venv/
 .idea/
 
