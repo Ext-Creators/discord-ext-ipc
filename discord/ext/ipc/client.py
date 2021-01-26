@@ -18,7 +18,6 @@ import aiohttp
 
 from .errors import *
 
-
 class Client:
     """Handles webserver side requests to the bot process.
 
@@ -65,7 +64,7 @@ class Client:
             port_data = json.loads(recv.data)
             self.port = port_data["port"]
 
-        self.websocket = await self.session.ws_connect(f"ws://{self.host}:{self.port}", autoping=False)
+        self.websocket = await self.session.ws_connect(f"ws://{self.host}:{self.port}", autoping=False, autoclose=False)
         print(f"Client connected to ws://{self.host}:{self.port}")
 
         return self.websocket
@@ -81,6 +80,14 @@ class Client:
 
         await self.websocket.send_str(json.dumps(fmt))
         recv = await self.websocket.receive()
+
+        if recv.type == aiohttp.WSMsgType.PING:
+            await self.websocket.ping()
+
+            return await self.request(endpoint, **kwargs)
+
+        if recv.type == aiohttp.WSMsgType.PONG:
+            return await self.request(endpoint, **kwargs)
 
         if recv.type == aiohttp.WSMsgType.CLOSED:
             return {"error": "IPC Server Unreachable, restart client process.", "code": 500}

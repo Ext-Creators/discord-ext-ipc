@@ -55,7 +55,7 @@ class IpcServerResponse:
 
 class Server:
     def __init__(self, bot, host: str = "localhost", port: int = 8765, secret_key: str = None,
-                 dont_multicast: bool = False):
+                 do_multicast: bool = True):
         self.bot = bot
         self.loop = bot.loop
 
@@ -67,7 +67,7 @@ class Server:
         self._server_coro = None
         self._multicast_server = None
 
-        self.do_multicast = not dont_multicast
+        self.do_multicast = do_multicast
 
         self.endpoints = {}
 
@@ -155,10 +155,10 @@ class Server:
             await websocket.send(json.dumps(response))
 
     def start(self):
-        """Start teh IPC server"""
-        print("Starting IPC on ws://{}:{}".format(self.host, self.port))
+        """Start the IPC server"""
+        self.bot.dispatch("ipc_ready")
 
-        self._server_coro = websockets.serve(self.handle_accept, self.host, self.port)
+        self._server_coro = websockets.serve(self.handle_accept, self.host, self.port, timeout=1)
         self.loop.run_until_complete(self._server_coro)
 
         if self.do_multicast:
