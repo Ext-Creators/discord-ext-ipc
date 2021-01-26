@@ -18,6 +18,7 @@ import aiohttp
 
 from .errors import *
 
+
 class Client:
     """Handles webserver side requests to the bot process.
 
@@ -29,9 +30,14 @@ class Client:
     :type secret_key: ``Union[str, bytes]``, optional
     """
 
-    def __init__(self, host: str = "localhost", port: int = None, secret_key: typing.Union[str, bytes] = None):
+    def __init__(
+            self,
+            host: str = "localhost",
+            port: int = None,
+            secret_key: typing.Union[str, bytes] = None,
+    ):
         """Constructor"""
-        self.loop = asyncio.get_event_loop() or asyncio.new_event_loop()
+        self.loop = asyncio.get_event_loop()
 
         self.secret_key = secret_key
 
@@ -54,8 +60,14 @@ class Client:
         self.session = aiohttp.ClientSession()
 
         if not self.port:
-            self.multicast = await self.session.ws_connect(f"ws://{self.host}:20000", autoping=False)
-            await self.multicast.send_str(json.dumps({"connect": True, "headers": {"Authorization": self.secret_key}}))
+            self.multicast = await self.session.ws_connect(
+                f"ws://{self.host}:20000", autoping=False
+            )
+            await self.multicast.send_str(
+                json.dumps(
+                    {"connect": True, "headers": {"Authorization": self.secret_key}}
+                )
+            )
             recv = await self.multicast.receive()
 
             if recv.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED):
@@ -64,7 +76,9 @@ class Client:
             port_data = json.loads(recv.data)
             self.port = port_data["port"]
 
-        self.websocket = await self.session.ws_connect(f"ws://{self.host}:{self.port}", autoping=False, autoclose=False)
+        self.websocket = await self.session.ws_connect(
+            f"ws://{self.host}:{self.port}", autoping=False, autoclose=False
+        )
         print(f"Client connected to ws://{self.host}:{self.port}")
 
         return self.websocket
@@ -76,7 +90,11 @@ class Client:
         :type endpoint: str
         :param **kwargs: The data to send to the endpoint
         :type **kwargs: ``Any``, optional"""
-        fmt = {"endpoint": endpoint, "data": kwargs, "headers": {"Authorization": self.secret_key}}
+        fmt = {
+            "endpoint": endpoint,
+            "data": kwargs,
+            "headers": {"Authorization": self.secret_key}
+        }
 
         await self.websocket.send_str(json.dumps(fmt))
         recv = await self.websocket.receive()
@@ -90,6 +108,9 @@ class Client:
             return await self.request(endpoint, **kwargs)
 
         if recv.type == aiohttp.WSMsgType.CLOSED:
-            return {"error": "IPC Server Unreachable, restart client process.", "code": 500}
+            return {
+                "error": "IPC Server Unreachable, restart client process.",
+                "code": 500
+            }
 
         return json.loads(recv.data)

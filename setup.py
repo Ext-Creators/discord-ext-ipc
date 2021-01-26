@@ -9,7 +9,9 @@ with open("requirements.txt") as stream:
     install_requires = stream.read().splitlines()
 
 with open("discord/ext/ipc/__init__.py") as stream:
-    version = re.search(r"^__version__\s*=\s*[\'\"]([^\'\"]*)[\'\"]", stream.read(), re.MULTILINE).group(1)
+    version = re.search(
+        r"^__version__\s*=\s*[\'\"]([^\'\"]*)[\'\"]", stream.read(), re.MULTILINE
+    ).group(1)
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",

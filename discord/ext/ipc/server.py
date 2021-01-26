@@ -12,7 +12,6 @@
 """
 
 import json
-import websockets
 import aiohttp.web
 
 from .errors import *
@@ -22,6 +21,7 @@ ROUTES = {}
 
 def route(name=None):
     """Used to register a coroutine as an endpoint"""
+
     def decorator(func):
         if not name:
             ROUTES[func.__name__] = func
@@ -55,8 +55,14 @@ class IpcServerResponse:
 
 
 class Server:
-    def __init__(self, bot, host: str = "localhost", port: int = 8765, secret_key: str = None,
-                 do_multicast: bool = True):
+    def __init__(
+            self,
+            bot,
+            host: str = "localhost",
+            port: int = 8765,
+            secret_key: str = None,
+            do_multicast: bool = True
+    ):
         self.bot = bot
         self.loop = bot.loop
 
@@ -74,6 +80,7 @@ class Server:
 
     def route(self, name=None):
         """Used to register a coroutine as an endpoint"""
+
         def decorator(func):
             if not name:
                 self.endpoints[func.__name__] = func
@@ -85,10 +92,7 @@ class Server:
     def update_endpoints(self):
         global ROUTES
 
-        self.endpoints = {
-            **self.endpoints,
-            **ROUTES
-        }
+        self.endpoints = {**self.endpoints, **ROUTES}
 
         ROUTES = {}
 
@@ -111,7 +115,9 @@ class Server:
                     response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
                     server_response = IpcServerResponse(request)
-                    attempted_cls = self.bot.cogs.get(self.endpoints[endpoint].__qualname__.split(".")[0])
+                    attempted_cls = self.bot.cogs.get(
+                        self.endpoints[endpoint].__qualname__.split(".")[0]
+                    )
 
                     if attempted_cls:
                         arguments = (attempted_cls, server_response)
@@ -124,21 +130,26 @@ class Server:
                     except Exception as error:
                         self.bot.dispatch("ipc_error", endpoint, error)
 
-                        response = {"error": "IPC route raised error of type {}".format(type(error).__name__),
-                                    "code": 500}
+                        response = {
+                            "error": "IPC route raised error of type {}".format(
+                                type(error).__name__
+                            ),
+                            "code": 500,
+                        }
 
             try:
                 await websocket.send_str(json.dumps(response))
             except TypeError as error:
-                if str(error).startswith("Object of type") and str(error).endswith("is not JSON serializable"):
-                    error_response = "IPC route returned values which are not able to be sent over sockets." \
-                                     " If you are trying to send a discord.py object," \
-                                     " please only send the data you need."
+                if str(error).startswith("Object of type") and str(error).endswith(
+                        "is not JSON serializable"
+                ):
+                    error_response = (
+                        "IPC route returned values which are not able to be sent over sockets."
+                        " If you are trying to send a discord.py object,"
+                        " please only send the data you need."
+                    )
 
-                    response = {
-                        "error": error_response,
-                        "code": 500
-                    }
+                    response = {"error": error_response, "code": 500}
 
                     await websocket.send_str(json.dumps(response))
 
@@ -157,7 +168,11 @@ class Server:
             if not headers or headers.get("Authorization") != self.secret_key:
                 response = {"error": "Invalid or no token provided.", "code": 403}
             else:
-                response = {"message": "Connection success", "port": self.port, "code": 200}
+                response = {
+                    "message": "Connection success",
+                    "port": self.port,
+                    "code": 200,
+                }
 
             await websocket.send_str(json.dumps(response))
 
