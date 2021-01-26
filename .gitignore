@@ -1,14 +1,6 @@
 # python cache
 __pycache__/
 
-# python test files
-test.py
-web-test.py
-cog.py
-
-venv/
-.idea/
-
 # python package-index
 /build/
 /dist/
