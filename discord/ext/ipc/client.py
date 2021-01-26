@@ -34,6 +34,7 @@ class Client:
             self,
             host: str = "localhost",
             port: int = None,
+            multicast_port : int = 20000,
             secret_key: typing.Union[str, bytes] = None,
     ):
         """Constructor"""
@@ -49,6 +50,8 @@ class Client:
         self.websocket = None
         self.multicast = None
 
+        self.multicast_port = multicast_port
+
         self.loop.run_until_complete(self.init_sock())
 
     async def init_sock(self):
@@ -61,7 +64,7 @@ class Client:
 
         if not self.port:
             self.multicast = await self.session.ws_connect(
-                f"ws://{self.host}:20000", autoping=False
+                f"ws://{self.host}:{self.multicast_port}", autoping=False
             )
             await self.multicast.send_str(
                 json.dumps(

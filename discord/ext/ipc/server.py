@@ -61,7 +61,8 @@ class Server:
             host: str = "localhost",
             port: int = 8765,
             secret_key: str = None,
-            do_multicast: bool = True
+            do_multicast: bool = True,
+            multicast_port: int = 20000
     ):
         self.bot = bot
         self.loop = bot.loop
@@ -75,6 +76,7 @@ class Server:
         self._multicast_server = None
 
         self.do_multicast = do_multicast
+        self.multicast_port = multicast_port
 
         self.endpoints = {}
 
@@ -195,6 +197,6 @@ class Server:
             self._multicast_server = aiohttp.web.Application(loop=self.loop)
             self._multicast_server.router.add_route("GET", "/", self.handle_multicast)
 
-            self.loop.run_until_complete(self.__start(self._multicast_server, 20000))
+            self.loop.run_until_complete(self.__start(self._multicast_server, self.multicast_port))
 
         self.loop.run_until_complete(self.__start(self._server, self.port))
