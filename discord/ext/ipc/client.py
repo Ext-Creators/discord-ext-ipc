@@ -52,8 +52,6 @@ class Client:
 
         self.multicast_port = multicast_port
 
-        self.loop.run_until_complete(self.init_sock())
-
     async def init_sock(self):
         """Attempts to connect to the server
 
@@ -93,6 +91,9 @@ class Client:
         :type endpoint: str
         :param **kwargs: The data to send to the endpoint
         :type **kwargs: ``Any``, optional"""
+        if not self.websocket:
+            await self.init_sock()
+
         fmt = {
             "endpoint": endpoint,
             "data": kwargs,
