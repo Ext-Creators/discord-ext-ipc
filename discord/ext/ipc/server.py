@@ -13,6 +13,7 @@
 
 import json
 import websockets
+import aiohttp.web
 
 from .errors import *
 
@@ -36,16 +37,16 @@ class IpcServerResponse:
     def __init__(self, data):
         self._json = data
         self.length = len(data)
-        
+
         self.endpoint = data["endpoint"]
 
         for key, value in data["data"].items():
             setattr(self, key, value)
-    
+
     def to_json(self):
         """Convert object to json"""
         return self._json
-    
+
     def __repr__(self):
         return "<IpcServerResponse length={0.length}>".format(self)
 
@@ -64,7 +65,7 @@ class Server:
         self.host = host
         self.port = port
 
-        self._server_coro = None
+        self._server = None
         self._multicast_server = None
 
         self.do_multicast = do_multicast
@@ -91,11 +92,14 @@ class Server:
 
         ROUTES = {}
 
-    async def handle_accept(self, websocket, _):
+    async def handle_accept(self, request):
         self.update_endpoints()
 
+        websocket = aiohttp.web.WebSocketResponse()
+        await websocket.prepare(request)
+
         async for message in websocket:
-            request = json.loads(message)
+            request = json.loads(message.data)
             endpoint = request.get("endpoint")
 
             headers = request.get("headers")
@@ -124,7 +128,7 @@ class Server:
                                     "code": 500}
 
             try:
-                await websocket.send(json.dumps(response))
+                await websocket.send_str(json.dumps(response))
             except TypeError as error:
                 if str(error).startswith("Object of type") and str(error).endswith("is not JSON serializable"):
                     error_response = "IPC route returned values which are not able to be sent over sockets." \
@@ -136,14 +140,17 @@ class Server:
                         "code": 500
                     }
 
-                    await websocket.send(json.dumps(response))
+                    await websocket.send_str(json.dumps(response))
 
                     raise JSONEncodeError(error_response)
 
-    async def handle_multicast(self, websocket, _):
+    async def handle_multicast(self, request):
         """Handle multicast requests"""
+        websocket = aiohttp.web.WebSocketResponse()
+        await websocket.prepare(request)
+
         async for message in websocket:
-            request = json.loads(message)
+            request = json.loads(message.data)
 
             headers = request.get("headers")
 
@@ -152,15 +159,27 @@ class Server:
             else:
                 response = {"message": "Connection success", "port": self.port, "code": 200}
 
-            await websocket.send(json.dumps(response))
+            await websocket.send_str(json.dumps(response))
+
+    async def __start(self, application, port):
+        """Start both servers"""
+        runner = aiohttp.web.AppRunner(application)
+        await runner.setup()
+
+        site = aiohttp.web.TCPSite(runner, self.host, port)
+        await site.start()
 
     def start(self):
         """Start the IPC server"""
         self.bot.dispatch("ipc_ready")
 
-        self._server_coro = websockets.serve(self.handle_accept, self.host, self.port, timeout=1)
-        self.loop.run_until_complete(self._server_coro)
+        self._server = aiohttp.web.Application(loop=self.loop)
+        self._server.router.add_route("GET", "/", self.handle_accept)
 
         if self.do_multicast:
-            self._multicast_server = websockets.serve(self.handle_multicast, self.host, 20000)
-            self.loop.run_until_complete(self._multicast_server)
+            self._multicast_server = aiohttp.web.Application(loop=self.loop)
+            self._multicast_server.router.add_route("GET", "/", self.handle_multicast)
+
+            self.loop.run_until_complete(self.__start(self._multicast_server, 20000))
+
+        self.loop.run_until_complete(self.__start(self._server, self.port))
