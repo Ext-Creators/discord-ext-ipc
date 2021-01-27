@@ -13,7 +13,7 @@
 
 from collections import namedtuple
 
-from .client import Client
+from discord.ext.ipc.client import Client
 from .server import Server
 from .errors import *
 
