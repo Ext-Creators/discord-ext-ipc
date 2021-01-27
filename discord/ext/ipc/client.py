@@ -91,6 +91,9 @@ class Client:
         :type endpoint: str
         :param **kwargs: The data to send to the endpoint
         :type **kwargs: ``Any``, optional"""
+        if not self.session:
+            self.session = aiohttp.ClientSession()
+
         websocket = await self.session.ws_connect(
             f"ws://{self.host}:{self.port}", autoping=False, autoclose=False
         )
