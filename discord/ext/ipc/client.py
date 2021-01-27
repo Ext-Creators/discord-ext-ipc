@@ -91,8 +91,9 @@ class Client:
         :type endpoint: str
         :param **kwargs: The data to send to the endpoint
         :type **kwargs: ``Any``, optional"""
-        if not self.websocket:
-            await self.init_sock()
+        websocket = await self.session.ws_connect(
+            f"ws://{self.host}:{self.port}", autoping=False, autoclose=False
+        )
 
         fmt = {
             "endpoint": endpoint,
@@ -100,11 +101,11 @@ class Client:
             "headers": {"Authorization": self.secret_key}
         }
 
-        await self.websocket.send_str(json.dumps(fmt))
-        recv = await self.websocket.receive()
+        await websocket.send_str(json.dumps(fmt))
+        recv = await websocket.receive()
 
         if recv.type == aiohttp.WSMsgType.PING:
-            await self.websocket.ping()
+            await websocket.ping()
 
             return await self.request(endpoint, **kwargs)
 
