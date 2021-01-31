@@ -13,11 +13,11 @@
 
 from collections import namedtuple
 
-from .client import Client
+from discord.ext.ipc.client import Client
 from .server import Server
 from .errors import *
 
 __version__ = "2.0.0a"
 
 _VersionInfo = namedtuple("_VersionInfo", "major minor micro releaselevel serial")
-version_info = _VersionInfo(major=1, minor=2, micro=0, releaselevel="alpha", serial=0)
+version_info = _VersionInfo(major=2, minor=0, micro=0, releaselevel="alpha", serial=0)
