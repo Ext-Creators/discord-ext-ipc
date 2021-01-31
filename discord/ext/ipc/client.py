@@ -34,7 +34,7 @@ class Client:
         self,
         host: str = "localhost",
         port: int = None,
-        multicast_port : int = 20000,
+        multicast_port: int = 20000,
         secret_key: typing.Union[str, bytes] = None,
     ):
         """Constructor"""
@@ -97,7 +97,7 @@ class Client:
         fmt = {
             "endpoint": endpoint,
             "data": kwargs,
-            "headers": {"Authorization": self.secret_key}
+            "headers": {"Authorization": self.secret_key},
         }
 
         await self.websocket.send_str(json.dumps(fmt))
@@ -114,7 +114,7 @@ class Client:
         if recv.type == aiohttp.WSMsgType.CLOSED:
             return {
                 "error": "IPC Server Unreachable, restart client process.",
-                "code": 500
+                "code": 500,
             }
 
         return json.loads(recv.data)

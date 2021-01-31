@@ -62,7 +62,7 @@ class Server:
         port: int = 8765,
         secret_key: str = None,
         do_multicast: bool = True,
-        multicast_port: int = 20000
+        multicast_port: int = 20000,
     ):
         self.bot = bot
         self.loop = bot.loop
@@ -141,7 +141,7 @@ class Server:
                 await websocket.send_str(json.dumps(response))
             except TypeError as error:
                 if str(error).startswith("Object of type") and str(error).endswith(
-                        "is not JSON serializable"
+                    "is not JSON serializable"
                 ):
                     error_response = (
                         "IPC route returned values which are not able to be sent over sockets."
@@ -195,6 +195,8 @@ class Server:
             self._multicast_server = aiohttp.web.Application(loop=self.loop)
             self._multicast_server.router.add_route("GET", "/", self.handle_multicast)
 
-            self.loop.run_until_complete(self.__start(self._multicast_server, self.multicast_port))
+            self.loop.run_until_complete(
+                self.__start(self._multicast_server, self.multicast_port)
+            )
 
         self.loop.run_until_complete(self.__start(self._server, self.port))
