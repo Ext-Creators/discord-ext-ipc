@@ -14,9 +14,7 @@
 import json
 import aiohttp.web
 
-from .errors import *
-
-ROUTES = {}
+from discord.ext.ipc.errors import *
 
 
 def route(name=None):
@@ -24,9 +22,9 @@ def route(name=None):
 
     def decorator(func):
         if not name:
-            ROUTES[func.__name__] = func
+            Server.ROUTES[func.__name__] = func
         else:
-            ROUTES[name] = func
+            Server.ROUTES[name] = func
 
     return decorator
 
@@ -55,14 +53,16 @@ class IpcServerResponse:
 
 
 class Server:
+    ROUTES = {}
+
     def __init__(
-            self,
-            bot,
-            host: str = "localhost",
-            port: int = 8765,
-            secret_key: str = None,
-            do_multicast: bool = True,
-            multicast_port: int = 20000
+        self,
+        bot,
+        host: str = "localhost",
+        port: int = 8765,
+        secret_key: str = None,
+        do_multicast: bool = True,
+        multicast_port: int = 20000
     ):
         self.bot = bot
         self.loop = bot.loop
@@ -92,11 +92,9 @@ class Server:
         return decorator
 
     def update_endpoints(self):
-        global ROUTES
+        self.endpoints = {**self.endpoints, **self.ROUTES}
 
-        self.endpoints = {**self.endpoints, **ROUTES}
-
-        ROUTES = {}
+        self.ROUTES = {}
 
     async def handle_accept(self, request):
         self.update_endpoints()

@@ -1,5 +1,5 @@
 """
-    Copyright 2020 Ext-Creators
+    Copyright 2021 Ext-Creators
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -16,7 +16,7 @@ import json
 import typing
 import aiohttp
 
-from .errors import *
+from discord.ext.ipc.errors import *
 
 
 class Client:
@@ -31,11 +31,11 @@ class Client:
     """
 
     def __init__(
-            self,
-            host: str = "localhost",
-            port: int = None,
-            multicast_port : int = 20000,
-            secret_key: typing.Union[str, bytes] = None,
+        self,
+        host: str = "localhost",
+        port: int = None,
+        multicast_port : int = 20000,
+        secret_key: typing.Union[str, bytes] = None,
     ):
         """Constructor"""
         self.loop = asyncio.get_event_loop()
@@ -92,11 +92,7 @@ class Client:
         :param **kwargs: The data to send to the endpoint
         :type **kwargs: ``Any``, optional"""
         if not self.session:
-            self.session = aiohttp.ClientSession()
-
-        websocket = await self.session.ws_connect(
-            f"ws://{self.host}:{self.port}", autoping=False, autoclose=False
-        )
+            await self.init_sock()
 
         fmt = {
             "endpoint": endpoint,
@@ -104,8 +100,8 @@ class Client:
             "headers": {"Authorization": self.secret_key}
         }
 
-        await websocket.send_str(json.dumps(fmt))
-        recv = await websocket.receive()
+        await self.websocket.send_str(json.dumps(fmt))
+        recv = await self.websocket.receive()
 
         if recv.type == aiohttp.WSMsgType.PING:
             await websocket.ping()

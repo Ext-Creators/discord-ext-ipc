@@ -12,25 +12,31 @@
 """
 
 
-class NoEndpointFoundError(Exception):
+class IPCError(Exception):
+    """Base IPC exception class"""
+
+    pass
+
+
+class NoEndpointFoundError(IPCError):
     """Raised upon requesting an invalid endpoint"""
 
     pass
 
 
-class ServerConnectionRefusedError(Exception):
+class ServerConnectionRefusedError(IPCError):
     """Raised upon a server refusing to connect / not being found"""
 
     pass
 
 
-class JSONEncodeError(Exception):
+class JSONEncodeError(IPCError):
     """Raise upon un-serializable objects are given to the IPC"""
 
     pass
 
 
-class NotConnected(Exception):
+class NotConnected(IPCError):
     """Raised upon websocket not connected"""
 
     pass
