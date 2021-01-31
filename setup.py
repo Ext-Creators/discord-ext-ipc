@@ -5,9 +5,6 @@ import setuptools
 with open("README.rst", "r") as stream:
     long_description = stream.read()
 
-with open("requirements.txt") as stream:
-    install_requires = stream.read().splitlines()
-
 with open("discord/ext/ipc/__init__.py") as stream:
     version = re.search(
         r"^__version__\s*=\s*[\'\"]([^\'\"]*)[\'\"]", stream.read(), re.MULTILINE
@@ -42,7 +39,7 @@ setuptools.setup(
     author="Ext-Creators",
     classifiers=classifiers,
     description="A discord.py extension for inter-process communication.",
-    install_requires=install_requires,
+    install_requires=["discord.py"],
     license="Apache Software License",
     long_description=long_description,
     long_description_content_type="text/x-rst",
