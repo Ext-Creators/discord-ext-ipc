@@ -14,8 +14,8 @@
 from collections import namedtuple
 
 from discord.ext.ipc.client import Client
-from .server import Server
-from .errors import *
+from discord.ext.ipc.server import Server
+from discord.ext.ipc.errors import *
 
 __version__ = "2.0.0a"
 
