@@ -1,5 +1,5 @@
 """
-    Copyright 2020 Ext-Creators
+    Copyright 2021 Ext-Creators
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -11,87 +11,110 @@
     limitations under the License.
 """
 
-
 import asyncio
 import json
-import socket
+import typing
+import aiohttp
 
-from .errors import *
+from discord.ext.ipc.errors import *
 
-
-class Node:
-    """Base Node class returned when an IPC server is discovered."""
-    
-    def __init__(self, client, data):
-        self.client = client
-        self._json = data
-        
-        self.ip = data.get("multicast_grp")
-        self.port = data.get("port")
-        self.endpoints = data.get("endpoints")
-    
-    def get_json(self):
-        """Convert object to json"""
-        return self._json
-
-    async def request(self, endpoint, **kwargs):
-        if endpoint not in self.endpoints.keys():
-            raise NoEndpointFoundError("Endpoint \"{}\" not found".format(endpoint))
-        
-        return await self.client.request(endpoint, self.port, **kwargs)
-    
-    def __str__(self):
-        return str(self.get_json())
 
 class Client:
-    """Main client class, used for delivering data from the web server to the bot"""
+    """Handles webserver side requests to the bot process.
 
-    def __init__(self, *, host="localhost", secret_key=None):
-        self.host = host
+    :param host: The IP or host of the IPC server, defaults to localhost
+    :type host: ``str``, optional
+    :param port: The port of the IPC server. If not supplied the port will be found automatically, defaults to None
+    :type port: ``int``, optional
+    :param secret_key: The secret key for your IPC server. Must match the server secret_key or requests will not go ahead, defaults to None
+    :type secret_key: ``Union[str, bytes]``, optional
+    """
+
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = None,
+        multicast_port: int = 20000,
+        secret_key: typing.Union[str, bytes] = None,
+    ):
+        """Constructor"""
+        self.loop = asyncio.get_event_loop()
+
         self.secret_key = secret_key
-        
-        self.nodes = {}
-    
-    async def discover(self):
-        """Get the first node found on your network"""
-        response = await self.request(None, 20000, multicast=True)
-        
-        if not response:
-            return None
 
-        node = Node(self, response)
-        self.nodes[node.port] = node
+        self.host = host
+        self.port = port
 
-        return node
-        
-    async def request(self, endpoint, port, **kwargs):
-        """Make a request to the IPC server"""
-        try:
-            reader, writer = await asyncio.open_connection(self.host, port)
+        self.session = None
 
-            if kwargs.get("multicast") and kwargs.get("multicast") is True:
-                data = {"multicast": True, "data": {"ping": 1}, "headers": {"Authentication": self.secret_key}}
-            else:
-                data = {"endpoint": endpoint, "data": kwargs, "headers": {"Authentication": self.secret_key}}
+        self.websocket = None
+        self.multicast = None
 
-            writer.write(json.dumps(data).encode("utf-8"))
-            
-            await writer.drain()
-            
-            data = b""
+        self.multicast_port = multicast_port
 
-            while not reader.at_eof():
-                data += await reader.read(100)
-                reader.feed_eof()
-            
-            to_ret = json.loads(data.decode("utf-8"))
-            
-            if to_ret == "null":
-                return None
-            
-            writer.close()
-            await writer.wait_closed()
+    async def init_sock(self):
+        """Attempts to connect to the server
 
-            return to_ret
-        except ConnectionRefusedError:
-            raise ServerConnectionRefusedError("No server found for ({}, {}), or server isn't accepting connections.".format(self.host, port))
+        :return: The websocket connection to the server
+        :rtype: ``Websocket``
+        """
+        self.session = aiohttp.ClientSession()
+
+        if not self.port:
+            self.multicast = await self.session.ws_connect(
+                f"ws://{self.host}:{self.multicast_port}", autoping=False
+            )
+            await self.multicast.send_str(
+                json.dumps(
+                    {"connect": True, "headers": {"Authorization": self.secret_key}}
+                )
+            )
+            recv = await self.multicast.receive()
+
+            if recv.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED):
+                raise NotConnected("Multicast server connection failed.")
+
+            port_data = json.loads(recv.data)
+            self.port = port_data["port"]
+
+        self.websocket = await self.session.ws_connect(
+            f"ws://{self.host}:{self.port}", autoping=False, autoclose=False
+        )
+        print(f"Client connected to ws://{self.host}:{self.port}")
+
+        return self.websocket
+
+    async def request(self, endpoint: str, **kwargs):
+        """Make a request to the IPC server process.
+
+        :param endpoint: The endpoint to request on the server
+        :type endpoint: str
+        :param **kwargs: The data to send to the endpoint
+        :type **kwargs: ``Any``, optional"""
+        if not self.session:
+            await self.init_sock()
+
+        fmt = {
+            "endpoint": endpoint,
+            "data": kwargs,
+            "headers": {"Authorization": self.secret_key},
+        }
+
+        await self.websocket.send_str(json.dumps(fmt))
+        recv = await self.websocket.receive()
+
+        if recv.type == aiohttp.WSMsgType.PING:
+            await websocket.ping()
+
+            return await self.request(endpoint, **kwargs)
+
+        if recv.type == aiohttp.WSMsgType.PONG:
+            return await self.request(endpoint, **kwargs)
+
+        if recv.type == aiohttp.WSMsgType.CLOSED:
+            return {
+                "error": "IPC Server Unreachable, restart client process.",
+                "code": 500,
+            }
+
+        return json.loads(recv.data)

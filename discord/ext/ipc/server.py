@@ -12,21 +12,22 @@
 """
 
 import json
-import asyncio
+import aiohttp.web
 
-import socket
+from discord.ext.ipc.errors import *
 
-ROUTES = {}
 
 def route(name=None):
     """Used to register a coroutine as an endpoint"""
+
     def decorator(func):
         if not name:
-            ROUTES[func.__name__] = func
+            Server.ROUTES[func.__name__] = func
         else:
-            ROUTES[name] = func
+            Server.ROUTES[name] = func
 
     return decorator
+
 
 class IpcServerResponse:
     """Format the json data parsed into a nice object"""
@@ -34,141 +35,168 @@ class IpcServerResponse:
     def __init__(self, data):
         self._json = data
         self.length = len(data)
-        
+
         self.endpoint = data["endpoint"]
 
         for key, value in data["data"].items():
             setattr(self, key, value)
-    
+
     def to_json(self):
         """Convert object to json"""
         return self._json
-    
+
     def __repr__(self):
         return "<IpcServerResponse length={0.length}>".format(self)
 
     def __str__(self):
         return self.__repr__()
 
+
 class Server:
-    """Main server class"""
+    ROUTES = {}
 
-    def __init__(self, bot, host, port, secret_key):
+    def __init__(
+        self,
+        bot,
+        host: str = "localhost",
+        port: int = 8765,
+        secret_key: str = None,
+        do_multicast: bool = True,
+        multicast_port: int = 20000,
+    ):
         self.bot = bot
-        self.bot._ipc = self
-
         self.loop = bot.loop
 
-        self.port = port
-        self.host = host
-        
-        self.clients = {}
-        self.endpoints = {}
-        
         self.secret_key = secret_key
-        
-        try:
-            self.multicast_grp = socket.gethostbyname(socket.gethostname())
-        except socket.gaierror:
-            self.multicast_grp = socket.gethostbyname("0.0.0.0")
-    
+
+        self.host = host
+        self.port = port
+
+        self._server = None
+        self._multicast_server = None
+
+        self.do_multicast = do_multicast
+        self.multicast_port = multicast_port
+
+        self.endpoints = {}
+
     def route(self, name=None):
         """Used to register a coroutine as an endpoint"""
+
         def decorator(func):
             if not name:
                 self.endpoints[func.__name__] = func
             else:
                 self.endpoints[name] = func
-        
+
         return decorator
-    
+
     def update_endpoints(self):
-        self.endpoints = {
-            **self.endpoints,
-            **ROUTES
-        }
-        
-    def client_connection_callback(self, cli_reader, cli_writer):
-        """Callback for client connections"""
-        client_id = cli_writer.get_extra_info("peername")
+        self.endpoints = {**self.endpoints, **self.ROUTES}
 
-        def client_cleanup(future):
-            try:
-                future.result()
-            except Exception:
-                pass
-        
-            del self.clients[client_id]
-        
-        task = asyncio.ensure_future(self.client_task(cli_reader, cli_writer))
-        task.add_done_callback(client_cleanup)
-        
-        self.clients[client_id] = task
-    
-    async def client_task(self, reader, writer):
-        """Processes the client request"""
+        self.ROUTES = {}
+
+    async def handle_accept(self, request):
         self.update_endpoints()
 
-        while True:
-            data = b""
+        websocket = aiohttp.web.WebSocketResponse()
+        await websocket.prepare(request)
 
-            while not reader.at_eof():
-                data += await reader.read(100)
-                reader.feed_eof()
-            
-            if data == b"":
-                return
+        async for message in websocket:
+            request = json.loads(message.data)
+            endpoint = request.get("endpoint")
 
-            data = data.decode()
-            parsed_json = json.loads(data)
-            
-            headers = parsed_json.get("headers")
-            
-            if not headers or not headers.get("Authentication"):
-                response = {"error": "No authentication provided.", "status": 403}
-            
-            token = headers.get("Authentication")
-            
-            if token != self.secret_key:
-                response = {"error": "Invalid authorization token provided.", "status": 403}
+            headers = request.get("headers")
+
+            if not headers or headers.get("Authorization") != self.secret_key:
+                response = {"error": "Invalid or no token provided.", "code": 403}
             else:
-                if parsed_json.get("multicast") and parsed_json.get("multicast") is True:
-                    endpoints = {}
-                    for name, func in self.endpoints.items():
-                        endpoints[name] = {"func_name": func.__name__}
-
-                    response = {"multicast_grp": self.multicast_grp, "port": self.port, "endpoints": endpoints}
+                if not endpoint or endpoint not in self.endpoints:
+                    response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
-                    endpoint = parsed_json.get("endpoint")
-                    
-                    if not endpoint or not self.endpoints.get(endpoint):
-                        response = {"error": 'No endpoint matching {} was found.'.format(endpoint), "status": 404}
+                    server_response = IpcServerResponse(request)
+                    attempted_cls = self.bot.cogs.get(
+                        self.endpoints[endpoint].__qualname__.split(".")[0]
+                    )
+
+                    if attempted_cls:
+                        arguments = (attempted_cls, server_response)
                     else:
-                        server_response = IpcServerResponse(parsed_json)
-                        
-                        attempted_cls = self.bot.cogs.get(self.endpoints[endpoint].__qualname__.split(".")[0])
+                        arguments = (server_response,)
 
-                        if attempted_cls:
-                            args = (attempted_cls, server_response)
-                        else:
-                            args = (server_response)
+                    try:
+                        ret = await self.endpoints[endpoint](*arguments)
+                        response = ret
+                    except Exception as error:
+                        self.bot.dispatch("ipc_error", endpoint, error)
 
-                        response = await self.endpoints[endpoint](*args)
-            
-            writer.write(json.dumps(response).encode("utf-8"))
-            await writer.drain()
-            
-            break
-    
-    def start(self, multicast=False):
+                        response = {
+                            "error": "IPC route raised error of type {}".format(
+                                type(error).__name__
+                            ),
+                            "code": 500,
+                        }
+
+            try:
+                await websocket.send_str(json.dumps(response))
+            except TypeError as error:
+                if str(error).startswith("Object of type") and str(error).endswith(
+                    "is not JSON serializable"
+                ):
+                    error_response = (
+                        "IPC route returned values which are not able to be sent over sockets."
+                        " If you are trying to send a discord.py object,"
+                        " please only send the data you need."
+                    )
+
+                    response = {"error": error_response, "code": 500}
+
+                    await websocket.send_str(json.dumps(response))
+
+                    raise JSONEncodeError(error_response)
+
+    async def handle_multicast(self, request):
+        """Handle multicast requests"""
+        websocket = aiohttp.web.WebSocketResponse()
+        await websocket.prepare(request)
+
+        async for message in websocket:
+            request = json.loads(message.data)
+
+            headers = request.get("headers")
+
+            if not headers or headers.get("Authorization") != self.secret_key:
+                response = {"error": "Invalid or no token provided.", "code": 403}
+            else:
+                response = {
+                    "message": "Connection success",
+                    "port": self.port,
+                    "code": 200,
+                }
+
+            await websocket.send_str(json.dumps(response))
+
+    async def __start(self, application, port):
+        """Start both servers"""
+        runner = aiohttp.web.AppRunner(application)
+        await runner.setup()
+
+        site = aiohttp.web.TCPSite(runner, self.host, port)
+        await site.start()
+
+    def start(self):
         """Start the IPC server"""
-        self.update_endpoints()
-
-        host = self.host if not multicast else self.multicast_grp
-        server_coro = asyncio.start_server(self.client_connection_callback, host, self.port, loop=self.loop)
-
         self.bot.dispatch("ipc_ready")
-        self.loop.run_until_complete(server_coro)
-        
-        multicast_server = asyncio.start_server(self.client_connection_callback, host, 20000, loop=self.loop)
-        self.loop.run_until_complete(multicast_server)
+
+        self._server = aiohttp.web.Application(loop=self.loop)
+        self._server.router.add_route("GET", "/", self.handle_accept)
+
+        if self.do_multicast:
+            self._multicast_server = aiohttp.web.Application(loop=self.loop)
+            self._multicast_server.router.add_route("GET", "/", self.handle_multicast)
+
+            self.loop.run_until_complete(
+                self.__start(self._multicast_server, self.multicast_port)
+            )
+
+        self.loop.run_until_complete(self.__start(self._server, self.port))

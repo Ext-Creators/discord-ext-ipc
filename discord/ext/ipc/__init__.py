@@ -1,5 +1,5 @@
 """
-    Copyright 2020 Ext-Creators
+    Copyright 2021 Ext-Creators
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -10,13 +10,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+
 from collections import namedtuple
 
-__version__ = "1.1.4a"
+from discord.ext.ipc.client import Client
+from discord.ext.ipc.server import Server
+from discord.ext.ipc.errors import *
+
+__version__ = "2.0.0a"
 
 _VersionInfo = namedtuple("_VersionInfo", "major minor micro releaselevel serial")
-version_info = _VersionInfo(major=1, minor=1, micro=4, releaselevel="alpha", serial=0)
-
-from .client import Client
-from .server import Server
-from .errors import *
+version_info = _VersionInfo(major=2, minor=0, micro=0, releaselevel="alpha", serial=0)
