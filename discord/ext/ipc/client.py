@@ -112,7 +112,7 @@ class Client:
             except asyncio.TimeoutError:
                 continue
 
-        recv = await self.websocket.receive()
+        recv = await websocket.receive()
 
         if recv.type == aiohttp.WSMsgType.PING:
             await websocket.ping()
@@ -128,4 +128,5 @@ class Client:
                 "code": 500,
             }
 
+        await websocket.close()
         return json.loads(recv.data)
