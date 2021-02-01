@@ -92,7 +92,12 @@ class Client:
         :param **kwargs: The data to send to the endpoint
         :type **kwargs: ``Any``, optional"""
         if not self.session:
-            await self.init_sock()
+            self.session = aiohttp.ClientSession()
+            #await self.init_sock()
+
+        websocket = await self.session.ws_connect(
+            f"ws://{self.host}:{self.port}", autoping=False, autoclose=False
+        )
 
         fmt = {
             "endpoint": endpoint,
@@ -100,7 +105,13 @@ class Client:
             "headers": {"Authorization": self.secret_key},
         }
 
-        await self.websocket.send_str(json.dumps(fmt))
+        while True:
+            try:
+                await websocket.send_str(json.dumps(fmt))
+                break
+            except asyncio.TimeoutError:
+                continue
+
         recv = await self.websocket.receive()
 
         if recv.type == aiohttp.WSMsgType.PING:
