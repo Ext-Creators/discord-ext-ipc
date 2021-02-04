@@ -19,4 +19,14 @@ for reasons such as readability, etc.
 Therefore, when documenting any new class's,
 methods, etc, please follow the linked docstring guide.
 
+### Manual building
+
+```shell
+> cd docs
+> make html
+```
+
+The built documentation will be located in
+`../docs/_build/html`
+
 *A guide by [Skelmis](https://github.com/Skelmis)*
