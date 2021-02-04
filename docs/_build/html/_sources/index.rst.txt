@@ -7,11 +7,13 @@ Welcome to discord-ext-ipc's documentation!
 ===========================================
 
 .. toctree::
+   :numbered:
    :maxdepth: 2
    :caption: Contents:
 
    modules/server.rst
    modules/client.rst
+   modules/examples.rst
 
 
 
