@@ -58,6 +58,6 @@ html_static_path = ['_static']
 
 def setup(app):
     # Register a sphinx.ext.autodoc.between listener to ignore everything
-    # between lines that contain the word LICENSE
-    app.connect("autodoc-process-docstring", between("^.*LICENSE.*$", exclude=True))
+    # between lines that contain the word DOC_IGNORE
+    app.connect("autodoc-process-docstring", between("^.*DOC_IGNORE.*$", exclude=True))
     return app

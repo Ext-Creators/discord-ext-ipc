@@ -1,5 +1,5 @@
 """
-LICENSE
+DOC_IGNORE
     Copyright 2021 Ext-Creators
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -10,7 +10,7 @@ LICENSE
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-LICENSE
+DOC_IGNORE
 """
 
 import asyncio
@@ -57,8 +57,10 @@ class Client:
     async def init_sock(self):
         """Attempts to connect to the server
 
-        :return: The websocket connection to the server
-        :rtype: ``Websocket``
+        Returns
+        -------
+        Websocket
+            The websocket connection to the server
         """
         self.session = aiohttp.ClientSession()
 
@@ -89,10 +91,13 @@ class Client:
     async def request(self, endpoint: str, **kwargs):
         """Make a request to the IPC server process.
 
-        :param endpoint: The endpoint to request on the server
-        :type endpoint: str
-        :param **kwargs: The data to send to the endpoint
-        :type **kwargs: ``Any``, optional"""
+        Parameters
+        ----------
+        endpoint : str
+            The endpoint to request on the server
+        **kwargs : Any, optional
+            The data to send to the endpoint
+        """
         if not self.session:
             await self.init_sock()
 
