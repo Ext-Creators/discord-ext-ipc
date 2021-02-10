@@ -19,13 +19,14 @@ from discord.ext.ipc.errors import *
 
 def route(name: str = None):
     """
-    Used to register a coroutine as an endpoint
-    when you don't have access to an instance of :class:`.Server`
+    Used to register a coroutine as an endpoint when you don't have
+    access to an instance of :class:`.Server`
 
     Parameters
     ----------
     name: str
-        The endpoint name. If not provided the method name will be used.
+        The endpoint name. If not provided the method name will be
+        used.
     """
 
     def decorator(func):
@@ -58,7 +59,8 @@ class IpcServerResponse:
 
 
 class Server:
-    """The IPC server. Usually used on the bot process for receiving requests from the client.
+    """The IPC server. Usually used on the bot process for receiving
+    requests from the client.
 
     Attributes
     ----------
@@ -69,7 +71,8 @@ class Server:
     port: int
         The port to run the IPC Server on. Defaults to 8765.
     secret_key: str
-        A secret key. Used for authentication and should be the same as your client's secret key.
+        A secret key. Used for authentication and should be the same as
+        your client's secret key.
     do_multicast: bool
         Turn multicasting on/off. Defaults to True
     multicast_port: int
@@ -104,11 +107,12 @@ class Server:
         self.endpoints = {}
 
     def route(self, name: str = None):
-        """Used to register a coroutine as an endpoint when you have access to an instance of :class:`~discord.ext.ipc.Server`.
+        """Used to register a coroutine as an endpoint when you have
+        access to an instance of :class:`.Server`.
 
         Parameters
         ----------
-        name: string
+        name: str
             The endpoint name. If not provided the method name will be used.
         """
 
