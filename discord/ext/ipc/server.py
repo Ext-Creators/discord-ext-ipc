@@ -18,11 +18,13 @@ from discord.ext.ipc.errors import *
 
 
 def route(name: str = None):
-    """Used to register a coroutine as an endpoint when you don't have access to an instance of :class:`~discord.ext.ipc.Server`.
+    """
+    Used to register a coroutine as an endpoint
+    when you don't have access to an instance of :class:`discord.ext.ipc.server.Server`
 
     Parameters
     ----------
-    name: string
+    name: str
         The endpoint name. If not provided the method name will be used.
     """
 
