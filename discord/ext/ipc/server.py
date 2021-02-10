@@ -20,7 +20,7 @@ from discord.ext.ipc.errors import *
 def route(name: str = None):
     """
     Used to register a coroutine as an endpoint
-    when you don't have access to an instance of :class:`discord.ext.ipc.server.Server`
+    when you don't have access to an instance of :class:`.Server`
 
     Parameters
     ----------
