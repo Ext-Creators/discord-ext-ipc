@@ -21,7 +21,6 @@ from discord.ext.ipc.errors import *
 
 class Client:
     """Handles webserver side requests to the bot process.
-
     :param host: The IP or host of the IPC server, defaults to localhost
     :type host: ``str``, optional
     :param port: The port of the IPC server. If not supplied the port will be found automatically, defaults to None
@@ -54,7 +53,6 @@ class Client:
 
     async def init_sock(self):
         """Attempts to connect to the server
-
         :return: The websocket connection to the server
         :rtype: ``Websocket``
         """
@@ -86,18 +84,12 @@ class Client:
 
     async def request(self, endpoint: str, **kwargs):
         """Make a request to the IPC server process.
-
         :param endpoint: The endpoint to request on the server
         :type endpoint: str
         :param **kwargs: The data to send to the endpoint
         :type **kwargs: ``Any``, optional"""
         if not self.session:
-            self.session = aiohttp.ClientSession()
-            #await self.init_sock()
-
-        websocket = await self.session.ws_connect(
-            f"ws://{self.host}:{self.port}", autoping=False, autoclose=False
-        )
+            await self.init_sock()
 
         fmt = {
             "endpoint": endpoint,
@@ -105,14 +97,8 @@ class Client:
             "headers": {"Authorization": self.secret_key},
         }
 
-        while True:
-            try:
-                await websocket.send_str(json.dumps(fmt))
-                break
-            except asyncio.TimeoutError:
-                continue
-
-        recv = await websocket.receive()
+        await self.websocket.send_str(json.dumps(fmt))
+        recv = await self.websocket.receive()
 
         if recv.type == aiohttp.WSMsgType.PING:
             await websocket.ping()
@@ -128,5 +114,4 @@ class Client:
                 "code": 500,
             }
 
-        await websocket.close()
         return json.loads(recv.data)
