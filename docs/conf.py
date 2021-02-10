@@ -1,15 +1,13 @@
-import os
-import sys
-
-sys.path.insert(0, os.path.abspath(".."))
-
-from discord.ext.ipc import __version__ as release
-
+import re
 
 project = "discord-ext-ipc"
 copyright = "2021, Ext-Creators"
 author = "Ext-Creators"
 
+with open("../discord/ext/ipc/__init__.py") as stream:
+    release = re.search(
+        r"^__version__\s*=\s*[\'\"]([^\'\"]*)[\'\"]", stream.read(), re.MULTILINE
+    ).group(1)
 
 extensions = [
     "sphinx.ext.autodoc",
