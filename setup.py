@@ -27,6 +27,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+extras_require = {
+    "docs": ["sphinx", "sphinxcontrib_trio", "sphinx-rtd-theme",],
+}
+
 project_urls = {
     "Issue Tracker": "https://github.com/Ext-Creators/discord-ext-ipc/issues",
     "Source": "https://github.com/Ext-Creators/discord-ext-ipc",
@@ -36,6 +40,7 @@ setuptools.setup(
     author="Ext-Creators",
     classifiers=classifiers,
     description="A discord.py extension for inter-process communication.",
+    extras_require=extras_require,
     install_requires=["discord.py"],
     license="Apache Software License",
     name="discord-ext-ipc",

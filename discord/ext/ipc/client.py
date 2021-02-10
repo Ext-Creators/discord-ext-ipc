@@ -21,13 +21,15 @@ from discord.ext.ipc.errors import *
 
 class Client:
     """Handles webserver side requests to the bot process.
-
-    :param host: The IP or host of the IPC server, defaults to localhost
-    :type host: ``str``, optional
-    :param port: The port of the IPC server. If not supplied the port will be found automatically, defaults to None
-    :type port: ``int``, optional
-    :param secret_key: The secret key for your IPC server. Must match the server secret_key or requests will not go ahead, defaults to None
-    :type secret_key: ``Union[str, bytes]``, optional
+    
+    Parameters
+    ----------
+    host: str
+        The IP or host of the IPC server, defaults to localhost
+    port: int
+        The port of the IPC server. If not supplied the port will be found automatically, defaults to None
+    secret_key: ``Union[str, bytes]``, optional
+        The secret key for your IPC server. Must match the server secret_key or requests will not go ahead, defaults to None
     """
 
     def __init__(
@@ -55,8 +57,10 @@ class Client:
     async def init_sock(self):
         """Attempts to connect to the server
 
-        :return: The websocket connection to the server
-        :rtype: ``Websocket``
+        Returns
+        -------
+        :class:`~aiohttp.ClientWebSocketResponse`
+            The websocket connection to the server
         """
         self.session = aiohttp.ClientSession()
 
@@ -87,10 +91,13 @@ class Client:
     async def request(self, endpoint: str, **kwargs):
         """Make a request to the IPC server process.
 
-        :param endpoint: The endpoint to request on the server
-        :type endpoint: str
-        :param **kwargs: The data to send to the endpoint
-        :type **kwargs: ``Any``, optional"""
+        Parameters
+        ----------
+        endpoint: str
+            The endpoint to request on the server
+        **kwargs
+            The data to send to the endpoint
+        """
         if not self.session:
             await self.init_sock()
 
