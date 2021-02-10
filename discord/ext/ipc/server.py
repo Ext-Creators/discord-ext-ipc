@@ -73,6 +73,7 @@ class Server:
     multicast_port: int
         The port to run the multicasting server on. Defaults to 20000
     """
+
     ROUTES = {}
 
     def __init__(
