@@ -21,7 +21,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
-    "sphinx-rtd-theme",
+    "sphinx_rtd_theme",
     "sphinxcontrib_trio",
 ]
 

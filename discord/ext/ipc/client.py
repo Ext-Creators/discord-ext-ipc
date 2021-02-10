@@ -1,5 +1,4 @@
 """
-DOC_IGNORE
     Copyright 2021 Ext-Creators
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -10,7 +9,6 @@ DOC_IGNORE
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-DOC_IGNORE
 """
 
 import asyncio
@@ -59,7 +57,7 @@ class Client:
 
         Returns
         -------
-        Websocket
+        :class:`~aiohttp.ClientWebSocketResponse`
             The websocket connection to the server
         """
         self.session = aiohttp.ClientSession()
@@ -93,9 +91,9 @@ class Client:
 
         Parameters
         ----------
-        endpoint : str
+        endpoint: str
             The endpoint to request on the server
-        **kwargs : Any, optional
+        **kwargs
             The data to send to the endpoint
         """
         if not self.session:
