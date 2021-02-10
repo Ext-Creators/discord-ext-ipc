@@ -124,7 +124,7 @@ class Server:
 
         self.ROUTES = {}
 
-    async def handle_accept(self, request: aiohttp.web.Reqeust):
+    async def handle_accept(self, request: aiohttp.web.Request):
         """Handles websocket requests from the client process.
 
         Parameters
