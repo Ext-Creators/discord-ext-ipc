@@ -23,8 +23,7 @@ It then calls the method linked to said route and returns the payload to the cli
 
 .. currentmodule:: discord.ext.ipc.server
 
-.. py:function:: route
+.. autofunction:: route
 
 .. autoclass:: Server
     :members:
-    :undoc-members:

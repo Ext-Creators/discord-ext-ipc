@@ -8,6 +8,7 @@ Welcome to discord-ext-ipc's documentation!
 
    modules/server.rst
    modules/client.rst
+   modules/errors.rst
    modules/examples.rst
 
 
