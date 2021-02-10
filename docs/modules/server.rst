@@ -21,6 +21,10 @@ For example, a client request could be {‘endpoint’: ‘get_guild_count’, �
 This JSON is processed upon a request being made, and checks for a registered route matching the name of the endpoint supplied.
 It then calls the method linked to said route and returns the payload to the client.
 
-.. automodule:: discord.ext.ipc.server
+.. currentmodule:: discord.ext.ipc.server
+
+.. py:function:: route
+
+.. autoclass:: Server
     :members:
     :undoc-members:

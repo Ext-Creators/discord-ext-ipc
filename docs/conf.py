@@ -3,20 +3,14 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-from discord.ext.ipc import __version__ as version
+from discord.ext.ipc import __version__ as release
 
-
-# -- Project information -----------------------------------------------------
 
 project = "discord-ext-ipc"
 copyright = "2021, Ext-Creators"
 author = "Ext-Creators"
 
-# The full version, including alpha/beta/rc tags
-release = version
 
-
-# -- General configuration ---------------------------------------------------
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
@@ -32,6 +26,7 @@ autodoc_typehints = "none"
 intersphinx_mapping = {
     "aiohttp": ("https://docs.aiohttp.org/en/stable/", None),
     "python": ("https://docs.python.org/3", None),
+    "discord": ("https://discordpy.readthedocs.io/en/latest", None),
 }
 
 highlight_language = "python3"

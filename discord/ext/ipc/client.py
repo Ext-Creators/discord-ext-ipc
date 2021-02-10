@@ -3,7 +3,7 @@
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,13 +21,15 @@ from discord.ext.ipc.errors import *
 
 class Client:
     """Handles webserver side requests to the bot process.
-
-    :param host: The IP or host of the IPC server, defaults to localhost
-    :type host: ``str``, optional
-    :param port: The port of the IPC server. If not supplied the port will be found automatically, defaults to None
-    :type port: ``int``, optional
-    :param secret_key: The secret key for your IPC server. Must match the server secret_key or requests will not go ahead, defaults to None
-    :type secret_key: ``Union[str, bytes]``, optional
+    
+    Parameters
+    ----------
+    host: str
+        The IP or host of the IPC server, defaults to localhost
+    port: int
+        The port of the IPC server. If not supplied the port will be found automatically, defaults to None
+    secret_key: ``Union[str, bytes]``, optional
+        The secret key for your IPC server. Must match the server secret_key or requests will not go ahead, defaults to None
     """
 
     def __init__(
