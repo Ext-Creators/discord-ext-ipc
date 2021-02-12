@@ -14,7 +14,7 @@
 import json
 import aiohttp.web
 
-from discord.ext.ipc.errors import *
+from .errors import *
 
 
 def route(name=None):

@@ -13,9 +13,9 @@
 
 from collections import namedtuple
 
-from discord.ext.ipc.client import Client
-from discord.ext.ipc.server import Server
-from discord.ext.ipc.errors import *
+from .client import Client
+from .server import Server
+from .errors import *
 
 __version__ = "2.0.0"
 
