@@ -51,6 +51,7 @@ class Client:
         self.multicast = None
 
         self.multicast_port = multicast_port
+        self.url = "ws://{0.host}:{0.multicast_port}".format(self)
 
     async def init_sock(self):
         """Attempts to connect to the server
@@ -62,7 +63,7 @@ class Client:
 
         if not self.port:
             self.multicast = await self.session.ws_connect(
-                f"ws://{self.host}:{self.multicast_port}", autoping=False
+                self.url, autoping=False
             )
             await self.multicast.send_str(
                 json.dumps(
@@ -78,9 +79,9 @@ class Client:
             self.port = port_data["port"]
 
         self.websocket = await self.session.ws_connect(
-            f"ws://{self.host}:{self.port}", autoping=False, autoclose=False
+            self.url, autoping=False, autoclose=False
         )
-        print(f"Client connected to ws://{self.host}:{self.port}")
+        print("Client connected to,", self.url)
 
         return self.websocket
 
@@ -104,7 +105,7 @@ class Client:
         recv = await self.websocket.receive()
 
         if recv.type == aiohttp.WSMsgType.PING:
-            await websocket.ping()
+            await self.websocket.ping()
 
             return await self.request(endpoint, **kwargs)
 
