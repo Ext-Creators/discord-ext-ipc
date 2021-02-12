@@ -81,7 +81,7 @@ class Client:
         self.websocket = await self.session.ws_connect(
             self.url, autoping=False, autoclose=False
         )
-        print("Client connected to,", self.url)
+        print("Client connected to", self.url)
 
         return self.websocket
 
