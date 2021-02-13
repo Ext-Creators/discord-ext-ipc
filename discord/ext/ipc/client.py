@@ -62,9 +62,7 @@ class Client:
         self.session = aiohttp.ClientSession()
 
         if not self.port:
-            self.multicast = await self.session.ws_connect(
-                self.url, autoping=False
-            )
+            self.multicast = await self.session.ws_connect(self.url, autoping=False)
             await self.multicast.send_str(
                 json.dumps(
                     {"connect": True, "headers": {"Authorization": self.secret_key}}
