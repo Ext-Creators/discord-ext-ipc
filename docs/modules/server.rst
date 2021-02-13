@@ -17,7 +17,7 @@ The server handles multiple things:
 So, how does it work?
 The server is simply just a websocket server.
 Requests are sent in a JSON payload to and from the server.
-For example, a client request could be {‘endpoint’: ‘get_guild_count’, ‘headers’: {...}}.
+For example, a client request could be {'endpoint': 'get_guild_count', 'headers': {...}}.
 This JSON is processed upon a request being made, and checks for a registered route matching the name of the endpoint supplied.
 It then calls the method linked to said route and returns the payload to the client.
 
