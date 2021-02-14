@@ -12,7 +12,7 @@
 """
 
 import json
-from typing import Callable, Optional, TypeVar, Any, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, TypeVar
 
 import aiohttp.web
 
@@ -56,6 +56,7 @@ class IpcServerResponse:
         return "<IpcServerResponse length={0.length}>".format(self)
 
     if TYPE_CHECKING:
+
         def __getattr__(self, item: str) -> Any:
             ...
 
@@ -184,7 +185,9 @@ class Server:
 
             await websocket.send_str(json.dumps(response))
 
-    async def __start(self, application: aiohttp.web.Application, port: Optional[int]) -> None:
+    async def __start(
+        self, application: aiohttp.web.Application, port: Optional[int]
+    ) -> None:
         """Start both servers"""
         runner = aiohttp.web.AppRunner(application)
         await runner.setup()
