@@ -62,7 +62,7 @@ class IpcServerResponse:
 
 
 class Server:
-    ROUTES: ClassVar[Dict[str, F]] = {}
+    ROUTES: Dict[str, F] = {}
 
     def __init__(
         self,
