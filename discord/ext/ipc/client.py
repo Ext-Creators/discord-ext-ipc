@@ -13,7 +13,8 @@
 
 import asyncio
 import json
-import typing
+from typing import AnyStr, Optional, Dict
+
 import aiohttp
 
 from discord.ext.ipc.errors import *
@@ -33,10 +34,10 @@ class Client:
     def __init__(
         self,
         host: str = "localhost",
-        port: int = None,
+        port: Optional[int] = None,
         multicast_port: int = 20000,
-        secret_key: typing.Union[str, bytes] = None,
-    ):
+        secret_key: Optional[AnyStr] = None,
+    ) -> None:
         """Constructor"""
         self.loop = asyncio.get_event_loop()
 
@@ -45,15 +46,15 @@ class Client:
         self.host = host
         self.port = port
 
-        self.session = None
+        self.session: Optional[aiohttp.ClientSession] = None
 
-        self.websocket = None
-        self.multicast = None
+        self.websocket: Optional[aiohttp.ClientWebSocketResponse] = None
+        self.multicast: Optional[aiohttp.ClientWebSocketResponse] = None
 
         self.multicast_port = multicast_port
         self.url = "ws://{0.host}:{0.multicast_port}".format(self)
 
-    async def init_sock(self):
+    async def init_sock(self) -> aiohttp.ClientWebSocketResponse:
         """Attempts to connect to the server
 
         :return: The websocket connection to the server
@@ -83,7 +84,7 @@ class Client:
 
         return self.websocket
 
-    async def request(self, endpoint: str, **kwargs):
+    async def request(self, endpoint: str, **kwargs: Any) -> Dict[str, Any]:
         """Make a request to the IPC server process.
 
         :param endpoint: The endpoint to request on the server
