@@ -12,15 +12,22 @@
 """
 
 import json
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, TypeVar
+
 import aiohttp.web
 
 from discord.ext.ipc.errors import *
 
+if TYPE_CHECKING:
+    from discord.ext.commands import Bot
 
-def route(name=None):
+F = TypeVar("F", bound=Callable)
+
+
+def route(name: Optional[str] = None) -> Callable[[F], F]:
     """Used to register a coroutine as an endpoint"""
 
-    def decorator(func):
+    def decorator(func: F) -> F:
         if not name:
             Server.ROUTES[func.__name__] = func
         else:
@@ -34,38 +41,40 @@ def route(name=None):
 class IpcServerResponse:
     """Format the json data parsed into a nice object"""
 
-    def __init__(self, data):
+    def __init__(self, data: Dict[str, Any]) -> None:
         self._json = data
         self.length = len(data)
 
-        self.endpoint = data["endpoint"]
+        self.endpoint: str = data["endpoint"]
 
         for key, value in data["data"].items():
             setattr(self, key, value)
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         """Convert object to json"""
         return self._json
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<IpcServerResponse length={0.length}>".format(self)
 
-    def __str__(self):
-        return self.__repr__()
+    if TYPE_CHECKING:
+
+        def __getattr__(self, item: str) -> Any:
+            ...
 
 
 class Server:
-    ROUTES = {}
+    ROUTES: Dict[str, F] = {}
 
     def __init__(
         self,
-        bot,
+        bot: Bot,
         host: str = "localhost",
         port: int = 8765,
-        secret_key: str = None,
+        secret_key: Optional[str] = None,
         do_multicast: bool = True,
         multicast_port: int = 20000,
-    ):
+    ) -> None:
         self.bot = bot
         self.loop = bot.loop
 
@@ -74,7 +83,7 @@ class Server:
         self.host = host
         self.port = port
 
-        self._server = None
+        self._server: Optional[aiohttp.web.Application] = None
         self._multicast_server = None
 
         self.do_multicast = do_multicast
@@ -82,10 +91,10 @@ class Server:
 
         self.endpoints = {}
 
-    def route(self, name=None):
+    def route(self, name: Optional[str] = None) -> Callable[[F], F]:
         """Used to register a coroutine as an endpoint"""
 
-        def decorator(func):
+        def decorator(func: F) -> F:
             if not name:
                 self.endpoints[func.__name__] = func
             else:
@@ -95,7 +104,7 @@ class Server:
 
         return decorator
 
-    def update_endpoints(self):
+    def update_endpoints(self) -> None:
         self.endpoints = {**self.endpoints, **self.ROUTES}
 
         self.ROUTES = {}
@@ -159,7 +168,7 @@ class Server:
 
                     raise JSONEncodeError(error_response)
 
-    async def handle_multicast(self, request):
+    async def handle_multicast(self, request: aiohttp.web.BaseRequest) -> None:
         """Handle multicast requests"""
         websocket = aiohttp.web.WebSocketResponse()
         await websocket.prepare(request)
@@ -180,7 +189,9 @@ class Server:
 
             await websocket.send_str(json.dumps(response))
 
-    async def __start(self, application, port):
+    async def __start(
+        self, application: aiohttp.web.Application, port: Optional[int]
+    ) -> None:
         """Start both servers"""
         runner = aiohttp.web.AppRunner(application)
         await runner.setup()
@@ -188,7 +199,7 @@ class Server:
         site = aiohttp.web.TCPSite(runner, self.host, port)
         await site.start()
 
-    def start(self):
+    def start(self) -> None:
         """Start the IPC server"""
         self.bot.dispatch("ipc_ready")
 
