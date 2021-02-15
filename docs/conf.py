@@ -5,9 +5,10 @@ copyright = "2021, Ext-Creators"
 author = "Ext-Creators"
 
 with open("../discord/ext/ipc/__init__.py") as stream:
-    release = re.search(
+    release = version = re.search(
         r"^__version__\s*=\s*[\'\"]([^\'\"]*)[\'\"]", stream.read(), re.MULTILINE
     ).group(1)
+    
 
 extensions = [
     "sphinx.ext.autodoc",

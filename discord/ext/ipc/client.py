@@ -20,7 +20,8 @@ from discord.ext.ipc.errors import *
 
 
 class Client:
-    """Handles webserver side requests to the bot process.
+    """
+    Handles webserver side requests to the bot process.
     
     Parameters
     ----------
