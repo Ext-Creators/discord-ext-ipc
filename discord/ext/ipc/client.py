@@ -28,7 +28,7 @@ class Client:
         The IP or host of the IPC server, defaults to localhost
     port: int
         The port of the IPC server. If not supplied the port will be found automatically, defaults to None
-    secret_key: ``Union[str, bytes]``, optional
+    secret_key: Union[str, bytes]
         The secret key for your IPC server. Must match the server secret_key or requests will not go ahead, defaults to None
     """
 
