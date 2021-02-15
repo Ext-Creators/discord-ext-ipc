@@ -26,6 +26,8 @@ def route(name=None):
         else:
             Server.ROUTES[name] = func
 
+        return func
+
     return decorator
 
 
@@ -88,6 +90,8 @@ class Server:
                 self.endpoints[func.__name__] = func
             else:
                 self.endpoints[name] = func
+
+            return func
 
         return decorator
 
