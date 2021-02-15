@@ -8,7 +8,7 @@ with open("../discord/ext/ipc/__init__.py") as stream:
     release = version = re.search(
         r"^__version__\s*=\s*[\'\"]([^\'\"]*)[\'\"]", stream.read(), re.MULTILINE
     ).group(1)
-    
+
 
 extensions = [
     "sphinx.ext.autodoc",
