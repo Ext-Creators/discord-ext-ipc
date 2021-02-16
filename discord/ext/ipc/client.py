@@ -22,7 +22,7 @@ from discord.ext.ipc.errors import *
 class Client:
     """
     Handles webserver side requests to the bot process.
-    
+
     Parameters
     ----------
     host: str
@@ -54,7 +54,12 @@ class Client:
         self.multicast = None
 
         self.multicast_port = multicast_port
-        self.url = "ws://{0.host}:{0.multicast_port}".format(self)
+
+    @property
+    def url(self):
+        return "ws://{0.host}:{1}".format(
+            self, self.port if self.multicast else self.multicast_port
+        )
 
     async def init_sock(self):
         """Attempts to connect to the server
