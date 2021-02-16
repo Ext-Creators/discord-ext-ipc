@@ -239,11 +239,11 @@ class Server:
         """Starts the IPC server."""
         self.bot.dispatch("ipc_ready")
 
-        self._server = aiohttp.web.Application(loop=self.loop)
+        self._server = aiohttp.web.Application()
         self._server.router.add_route("GET", "/", self.handle_accept)
 
         if self.do_multicast:
-            self._multicast_server = aiohttp.web.Application(loop=self.loop)
+            self._multicast_server = aiohttp.web.Application()
             self._multicast_server.router.add_route("GET", "/", self.handle_multicast)
 
             self.loop.run_until_complete(
