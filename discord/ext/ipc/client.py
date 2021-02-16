@@ -20,13 +20,17 @@ from discord.ext.ipc.errors import *
 
 
 class Client:
-    """Handles webserver side requests to the bot process.
-    :param host: The IP or host of the IPC server, defaults to localhost
-    :type host: ``str``, optional
-    :param port: The port of the IPC server. If not supplied the port will be found automatically, defaults to None
-    :type port: ``int``, optional
-    :param secret_key: The secret key for your IPC server. Must match the server secret_key or requests will not go ahead, defaults to None
-    :type secret_key: ``Union[str, bytes]``, optional
+    """
+    Handles webserver side requests to the bot process.
+
+    Parameters
+    ----------
+    host: str
+        The IP or host of the IPC server, defaults to localhost
+    port: int
+        The port of the IPC server. If not supplied the port will be found automatically, defaults to None
+    secret_key: Union[str, bytes]
+        The secret key for your IPC server. Must match the server secret_key or requests will not go ahead, defaults to None
     """
 
     def __init__(
@@ -50,18 +54,19 @@ class Client:
         self.multicast = None
 
         self.multicast_port = multicast_port
+        self.url = "ws://{0.host}:{0.multicast_port}".format(self)
 
     async def init_sock(self):
         """Attempts to connect to the server
-        :return: The websocket connection to the server
-        :rtype: ``Websocket``
+        Returns
+        -------
+        :class:`~aiohttp.ClientWebSocketResponse`
+            The websocket connection to the server
         """
         self.session = aiohttp.ClientSession()
 
         if not self.port:
-            self.multicast = await self.session.ws_connect(
-                f"ws://{self.host}:{self.multicast_port}", autoping=False
-            )
+            self.multicast = await self.session.ws_connect(self.url, autoping=False)
             await self.multicast.send_str(
                 json.dumps(
                     {"connect": True, "headers": {"Authorization": self.secret_key}}
@@ -76,18 +81,21 @@ class Client:
             self.port = port_data["port"]
 
         self.websocket = await self.session.ws_connect(
-            f"ws://{self.host}:{self.port}", autoping=False, autoclose=False
+            self.url, autoping=False, autoclose=False
         )
-        print(f"Client connected to ws://{self.host}:{self.port}")
+        print("Client connected to", self.url)
 
         return self.websocket
 
     async def request(self, endpoint: str, **kwargs):
         """Make a request to the IPC server process.
-        :param endpoint: The endpoint to request on the server
-        :type endpoint: str
-        :param **kwargs: The data to send to the endpoint
-        :type **kwargs: ``Any``, optional"""
+        Parameters
+        ----------
+        endpoint: str
+            The endpoint to request on the server
+        **kwargs
+            The data to send to the endpoint
+        """
         if not self.session:
             await self.init_sock()
 
@@ -101,7 +109,7 @@ class Client:
         recv = await self.websocket.receive()
 
         if recv.type == aiohttp.WSMsgType.PING:
-            await websocket.ping()
+            await self.websocket.ping()
 
             return await self.request(endpoint, **kwargs)
 

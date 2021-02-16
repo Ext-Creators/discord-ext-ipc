@@ -18,12 +18,14 @@ from discord.ext.ipc.errors import *
 
 
 def route(name: str = None):
-    """Used to register a coroutine as an endpoint when you don't have access to an instance of :class:`~discord.ext.ipc.Server`.
-
+    """
+    Used to register a coroutine as an endpoint when you don't have
+    access to an instance of :class:`.Server`
     Parameters
     ----------
-    name: string
-        The endpoint name. If not provided the method name will be used.
+    name: str
+        The endpoint name. If not provided the method name will be
+        used.
     """
 
     def decorator(func):
@@ -31,6 +33,8 @@ def route(name: str = None):
             Server.ROUTES[func.__name__] = func
         else:
             Server.ROUTES[name] = func
+
+        return func
 
     return decorator
 
@@ -56,8 +60,8 @@ class IpcServerResponse:
 
 
 class Server:
-    """The IPC server. Usually used on the bot process for receiving requests from the client.
-
+    """The IPC server. Usually used on the bot process for receiving
+    requests from the client.
     Attributes
     ----------
     bot: :class:`~discord.ext.commands.Bot`
@@ -67,12 +71,14 @@ class Server:
     port: int
         The port to run the IPC Server on. Defaults to 8765.
     secret_key: str
-        A secret key. Used for authentication and should be the same as your client's secret key.
+        A secret key. Used for authentication and should be the same as
+        your client's secret key.
     do_multicast: bool
         Turn multicasting on/off. Defaults to True
     multicast_port: int
         The port to run the multicasting server on. Defaults to 20000
     """
+
     ROUTES = {}
 
     def __init__(
@@ -101,11 +107,11 @@ class Server:
         self.endpoints = {}
 
     def route(self, name: str = None):
-        """Used to register a coroutine as an endpoint when you have access to an instance of :class:`~discord.ext.ipc.Server`.
-
+        """Used to register a coroutine as an endpoint when you have
+        access to an instance of :class:`.Server`.
         Parameters
         ----------
-        name: string
+        name: str
             The endpoint name. If not provided the method name will be used.
         """
 
@@ -115,6 +121,8 @@ class Server:
             else:
                 self.endpoints[name] = func
 
+            return func
+
         return decorator
 
     def update_endpoints(self):
@@ -123,9 +131,8 @@ class Server:
 
         self.ROUTES = {}
 
-    async def handle_accept(self, request: aiohttp.web.Reqeust):
+    async def handle_accept(self, request: aiohttp.web.Request):
         """Handles websocket requests from the client process.
-
         Parameters
         ----------
         request: :class:`~aiohttp.web.Request`
@@ -191,7 +198,6 @@ class Server:
 
     async def handle_multicast(self, request: aiohttp.web.Request):
         """Handles multicasting websocket requests from the client.
-
         Parameters
         ----------
         request: :class:`~aiohttp.web.Request`
@@ -228,11 +234,11 @@ class Server:
         """Starts the IPC server."""
         self.bot.dispatch("ipc_ready")
 
-        self._server = aiohttp.web.Application(loop=self.loop)
+        self._server = aiohttp.web.Application()
         self._server.router.add_route("GET", "/", self.handle_accept)
 
         if self.do_multicast:
-            self._multicast_server = aiohttp.web.Application(loop=self.loop)
+            self._multicast_server = aiohttp.web.Application()
             self._multicast_server.router.add_route("GET", "/", self.handle_multicast)
 
             self.loop.run_until_complete(
