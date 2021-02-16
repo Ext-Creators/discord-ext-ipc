@@ -2,21 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="03d241cd-7593-41d3-a18a-040bec27fd2f" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.github/workflows/deploy.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.readthedocs.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/Makefile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/conf.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/index.rst" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/modules/client.rst" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/modules/errors.rst" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/modules/examples.rst" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/modules/server.rst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/release.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/release.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.rst" beforeDir="false" afterPath="$PROJECT_DIR$/README.rst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/discord/ext/ipc/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/discord/ext/ipc/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/discord/ext/ipc/client.py" beforeDir="false" afterPath="$PROJECT_DIR$/discord/ext/ipc/client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/discord/ext/ipc/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/discord/ext/ipc/server.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

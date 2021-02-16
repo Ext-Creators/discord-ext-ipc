@@ -39,7 +39,7 @@ Installation
 Documentation
 -------------
 
-For documentation, refer to `the official discord-ext-ipc documentation page <https://discord-ext-ipc.readthedocs.io/en/latest/>`_.
+For documentation, refer to `the discord-ext-ipc documentation page <https://discord-ext-ipc.readthedocs.io/en/latest/>`_.
 
 Usage
 -----
