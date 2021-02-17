@@ -11,6 +11,11 @@
                  src="https://github.com/Ext-Creators/discord-ext-ipc/workflows/Build/badge.svg?event=push" />
         </a>
 
+        <a href="https://github.com/Ext-Creators/discord-ext-ipc/actions?query=workflow%3ADeploy+event%3Apush">
+            <img alt="Deploy Status"
+                 src="https://github.com/Ext-Creators/discord-ext-ipc/workflows/Deploy/badge.svg?event=push" />
+        </a>
+
         <a href="https://github.com/Ext-Creators/discord-ext-ipc/actions?query=workflow%3ALint+event%3Apush">
             <img alt="Lint Status"
                  src="https://github.com/Ext-Creators/discord-ext-ipc/workflows/Lint/badge.svg?event=push" />
