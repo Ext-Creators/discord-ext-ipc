@@ -162,9 +162,9 @@ class Server:
 
             if not headers or headers.get("Authorization") != self.secret_key:
                 log.info(
-                    'Received unauthorized request (Invalid or no token provided).')
-                response = {
-                    "error": "Invalid or no token provided.", "code": 403}
+                    "Received unauthorized request (Invalid or no token provided)."
+                )
+                response = {"error": "Invalid or no token provided.", "code": 403}
             else:
                 if not endpoint or endpoint not in self.endpoints:
                     log.info("Received invalid request (Invalid or no endpoint given).")
@@ -185,7 +185,7 @@ class Server:
                         response = ret
                     except Exception as error:
                         log.error(
-                            'Received error while executing %r with %r',
+                            "Received error while executing %r with %r",
                             endpoint,
                             request,
                         )
