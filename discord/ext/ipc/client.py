@@ -76,11 +76,12 @@ class Client:
 
         if not self.port:
             log.debug(
-                "No port was provided - initiating multicast connection at %s.", self.url)
+                "No port was provided - initiating multicast connection at %s.",
+                self.url,
+            )
             self.multicast = await self.session.ws_connect(self.url, autoping=False)
 
-            payload = {"connect": True, "headers": {
-                "Authorization": self.secret_key}}
+            payload = {"connect": True, "headers": {"Authorization": self.secret_key}}
             log.debug("Multicast Server < %r", payload)
 
             await self.multicast.send_json(payload)
@@ -90,7 +91,8 @@ class Client:
 
             if recv.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED):
                 log.error(
-                    "WebSocket connection unexpectedly closed. Multicast Server is unreachable.")
+                    "WebSocket connection unexpectedly closed. Multicast Server is unreachable."
+                )
                 raise NotConnected("Multicast server connection failed.")
 
             port_data = recv.json()
@@ -143,7 +145,8 @@ class Client:
 
         if recv.type == aiohttp.WSMsgType.CLOSED:
             log.error(
-                "WebSocket connection unexpectedly closed. IPC Server is unreachable.")
+                "WebSocket connection unexpectedly closed. IPC Server is unreachable."
+            )
             return {
                 "error": "IPC Server Unreachable, restart client process.",
                 "code": 500,

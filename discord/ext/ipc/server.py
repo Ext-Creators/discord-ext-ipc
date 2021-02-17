@@ -154,7 +154,7 @@ class Server:
         async for message in websocket:
             request = message.json()
 
-            log.debug('IPC Server < %r', request)
+            log.debug("IPC Server < %r", request)
 
             endpoint = request.get("endpoint")
 
@@ -167,10 +167,8 @@ class Server:
                     "error": "Invalid or no token provided.", "code": 403}
             else:
                 if not endpoint or endpoint not in self.endpoints:
-                    log.info(
-                        'Received invalid request (Invalid or no endpoint given).')
-                    response = {
-                        "error": "Invalid or no endpoint given.", "code": 400}
+                    log.info("Received invalid request (Invalid or no endpoint given).")
+                    response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
                     server_response = IpcServerResponse(request)
                     attempted_cls = self.bot.cogs.get(
@@ -187,7 +185,10 @@ class Server:
                         response = ret
                     except Exception as error:
                         log.error(
-                            'Received error while executing %r with %r', endpoint, request)
+                            'Received error while executing %r with %r',
+                            endpoint,
+                            request,
+                        )
                         self.bot.dispatch("ipc_error", endpoint, error)
 
                         response = {
@@ -199,7 +200,7 @@ class Server:
 
             try:
                 await websocket.send_json(response)
-                log.debug('IPC Server > %r', response)
+                log.debug("IPC Server > %r", response)
             except TypeError as error:
                 if str(error).startswith("Object of type") and str(error).endswith(
                     "is not JSON serializable"
@@ -214,7 +215,7 @@ class Server:
                     response = {"error": error_response, "code": 500}
 
                     await websocket.send_json(response)
-                    log.debug('IPC Server > %r', response)
+                    log.debug("IPC Server > %r", response)
 
                     raise JSONEncodeError(error_response)
 
@@ -233,7 +234,7 @@ class Server:
         async for message in websocket:
             request = message.json()
 
-            log.debug('Multicast Server < %r', request)
+            log.debug("Multicast Server < %r", request)
 
             headers = request.get("headers")
 
@@ -246,7 +247,7 @@ class Server:
                     "code": 200,
                 }
 
-            log.debug('Multicast Server > %r', response)
+            log.debug("Multicast Server > %r", response)
 
             await websocket.send_json(response)
 
