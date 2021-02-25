@@ -200,7 +200,7 @@ class Server:
 
             try:
                 log.debug("IPC Server > %r", response)
-                await websocket.send_json(json.dumps(response))
+                await websocket.send_json(response)
             except TypeError as error:
                 if str(error).startswith("Object of type") and str(error).endswith(
                     "is not JSON serializable"
@@ -214,7 +214,7 @@ class Server:
 
                     response = {"error": error_response, "code": 500}
 
-                    await websocket.send_json(json.dumps(response))
+                    await websocket.send_json(response)
                     log.debug("IPC Server > %r", response)
 
                     raise JSONEncodeError(error_response)
@@ -232,7 +232,7 @@ class Server:
         await websocket.prepare(request)
 
         async for message in websocket:
-            request = json.loads(message.data)
+            request = message.json()
 
             headers = request.get("headers")
 
@@ -247,7 +247,7 @@ class Server:
 
                 log.debug("Multicast Server > %r", response)
 
-            await websocket.send_json(json.dumps(response))
+            await websocket.send_json(response)
 
     async def __start(self, application, port):
         """Start both servers"""
