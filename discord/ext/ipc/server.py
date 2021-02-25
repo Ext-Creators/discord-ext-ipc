@@ -58,9 +58,6 @@ class IpcServerResponse:
     def __str__(self):
         return self.__repr__()
 
-    def __iter__(self):
-        return self
-
 
 class Server:
     """The IPC server. Usually used on the bot process for receiving
