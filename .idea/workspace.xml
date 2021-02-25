@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="03d241cd-7593-41d3-a18a-040bec27fd2f" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/discord/ext/ipc/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/discord/ext/ipc/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/modules/server.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/modules/server.rst" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
