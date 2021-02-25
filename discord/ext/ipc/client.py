@@ -12,11 +12,13 @@
 """
 
 import asyncio
-import json
+import logging
 import typing
-import aiohttp
 
+import aiohttp
 from discord.ext.ipc.errors import *
+
+log = logging.getLogger(__name__)
 
 
 class Client:
@@ -54,7 +56,12 @@ class Client:
         self.multicast = None
 
         self.multicast_port = multicast_port
-        self.url = "ws://{0.host}:{0.multicast_port}".format(self)
+
+    @property
+    def url(self):
+        return "ws://{0.host}:{1}".format(
+            self, self.port if self.multicast else self.multicast_port
+        )
 
     async def init_sock(self):
         """Attempts to connect to the server
@@ -63,27 +70,37 @@ class Client:
         :class:`~aiohttp.ClientWebSocketResponse`
             The websocket connection to the server
         """
+        log.info("Initiating WebSocket connection.")
         self.session = aiohttp.ClientSession()
 
         if not self.port:
-            self.multicast = await self.session.ws_connect(self.url, autoping=False)
-            await self.multicast.send_str(
-                json.dumps(
-                    {"connect": True, "headers": {"Authorization": self.secret_key}}
-                )
+            log.debug(
+                "No port was provided - initiating multicast connection at %s.",
+                self.url,
             )
+            self.multicast = await self.session.ws_connect(self.url, autoping=False)
+
+            payload = {"connect": True, "headers": {"Authorization": self.secret_key}}
+            log.debug("Multicast Server < %r", payload)
+
+            await self.multicast.send_json(payload)
             recv = await self.multicast.receive()
 
+            log.debug("Multicast Server > %r", recv)
+
             if recv.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED):
+                log.error(
+                    "WebSocket connection unexpectedly closed. Multicast Server is unreachable."
+                )
                 raise NotConnected("Multicast server connection failed.")
 
-            port_data = json.loads(recv.data)
+            port_data = recv.json()
             self.port = port_data["port"]
 
         self.websocket = await self.session.ws_connect(
             self.url, autoping=False, autoclose=False
         )
-        print("Client connected to", self.url)
+        log.info("Client connected to %s", self.url)
 
         return self.websocket
 
@@ -96,30 +113,41 @@ class Client:
         **kwargs
             The data to send to the endpoint
         """
+        log.info("Requesting IPC Server for %r with %r", endpoint, kwargs)
         if not self.session:
             await self.init_sock()
 
-        fmt = {
+        payload = {
             "endpoint": endpoint,
             "data": kwargs,
             "headers": {"Authorization": self.secret_key},
         }
 
-        await self.websocket.send_str(json.dumps(fmt))
+        await self.websocket.send_json(payload)
+
+        log.debug("Client > %r", payload)
+
         recv = await self.websocket.receive()
 
+        log.debug("Client < %r", recv)
+
         if recv.type == aiohttp.WSMsgType.PING:
+            log.info("Received request to PING")
             await self.websocket.ping()
 
             return await self.request(endpoint, **kwargs)
 
         if recv.type == aiohttp.WSMsgType.PONG:
+            log.info("Received PONG")
             return await self.request(endpoint, **kwargs)
 
         if recv.type == aiohttp.WSMsgType.CLOSED:
+            log.error(
+                "WebSocket connection unexpectedly closed. IPC Server is unreachable."
+            )
             return {
                 "error": "IPC Server Unreachable, restart client process.",
                 "code": 500,
             }
 
-        return json.loads(recv.data)
+        return recv.json()

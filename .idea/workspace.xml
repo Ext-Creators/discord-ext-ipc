@@ -2,8 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="03d241cd-7593-41d3-a18a-040bec27fd2f" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.github/CODEOWNERS" beforeDir="false" afterPath="$PROJECT_DIR$/.github/CODEOWNERS" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.rst" beforeDir="false" afterPath="$PROJECT_DIR$/README.rst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/discord/ext/ipc/client.py" beforeDir="false" afterPath="$PROJECT_DIR$/discord/ext/ipc/client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/discord/ext/ipc/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/discord/ext/ipc/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/cog_based_ipc/cogs/ipc.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/cog_based_ipc/cogs/ipc.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -14,6 +18,9 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1mkL7dlMUhI4drRqKzePKhMFlFs" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />

@@ -58,6 +58,9 @@ class IpcServerResponse:
     def __str__(self):
         return self.__repr__()
 
+    def __iter__(self):
+        return self
+
 
 class Server:
     """The IPC server. Usually used on the bot process for receiving
@@ -89,6 +92,7 @@ class Server:
         secret_key: str = None,
         do_multicast: bool = True,
         multicast_port: int = 20000,
+        pass_kwargs: bool = False,
     ):
         self.bot = bot
         self.loop = bot.loop
@@ -104,9 +108,43 @@ class Server:
         self.do_multicast = do_multicast
         self.multicast_port = multicast_port
 
+        self.pass_kwargs = pass_kwargs
+
         self.endpoints = {}
 
+    def add_cog(self, cls):
+        """Register a cog which has IPC routes within it.
+
+        ----------
+        cls: callable
+            The class to register as a cog.
+        """
+        self.bot.add_cog(cls)
+
+        for method in dir(cls):
+            method = getattr(cls, method)
+
+            if hasattr(method, "__ipc_route_name__"):
+                self.endpoints[method.__ipc_route_name__] = method
+
     def route(self, name: str = None):
+        """Used to register a coroutine as an endpoint when you have
+        access to an instance of :class:`.Server`.
+        Parameters
+        ----------
+            name: str
+                The endpoint name. If not provided the method name will be used.
+        """
+
+        def decorator(func):
+            self.endpoints[name or func.__name__] = func
+
+            return func
+
+        return decorator
+
+    @staticmethod
+    def listener(name: str = None):
         """Used to register a coroutine as an endpoint when you have
         access to an instance of :class:`.Server`.
         Parameters
@@ -116,20 +154,11 @@ class Server:
         """
 
         def decorator(func):
-            if not name:
-                self.endpoints[func.__name__] = func
-            else:
-                self.endpoints[name] = func
+            setattr(func, "__ipc_route_name__", name or func.__name__)
 
             return func
 
         return decorator
-
-    def update_endpoints(self):
-        """Called internally to update the server's endpoints for cog routes."""
-        self.endpoints = {**self.endpoints, **self.ROUTES}
-
-        self.ROUTES = {}
 
     async def handle_accept(self, request: aiohttp.web.Request):
         """Handles websocket requests from the client process.
@@ -138,8 +167,7 @@ class Server:
         request: :class:`~aiohttp.web.Request`
             The request made by the client, parsed by aiohttp.
         """
-        self.update_endpoints()
-
+        print(self.endpoints)
         websocket = aiohttp.web.WebSocketResponse()
         await websocket.prepare(request)
 
@@ -155,18 +183,16 @@ class Server:
                 if not endpoint or endpoint not in self.endpoints:
                     response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
-                    server_response = IpcServerResponse(request)
-                    attempted_cls = self.bot.cogs.get(
-                        self.endpoints[endpoint].__qualname__.split(".")[0]
-                    )
-
-                    if attempted_cls:
-                        arguments = (attempted_cls, server_response)
+                    if not self.pass_kwargs:
+                        server_response = IpcServerResponse(request)
                     else:
-                        arguments = (server_response,)
+                        server_response = request["data"]
 
                     try:
-                        ret = await self.endpoints[endpoint](*arguments)
+                        if isinstance(server_response, dict):
+                            ret = await self.endpoints[endpoint](**server_response)
+                        else:
+                            ret = await self.endpoints[endpoint](server_response)
                         response = ret
                     except Exception as error:
                         self.bot.dispatch("ipc_error", endpoint, error)
