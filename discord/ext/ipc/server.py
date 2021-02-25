@@ -11,32 +11,15 @@
     limitations under the License.
 """
 
+import logging
+
 import json
 import aiohttp.web
 
 from discord.ext.ipc.errors import *
 
 
-def route(name: str = None):
-    """
-    Used to register a coroutine as an endpoint when you don't have
-    access to an instance of :class:`.Server`
-    Parameters
-    ----------
-    name: str
-        The endpoint name. If not provided the method name will be
-        used.
-    """
-
-    def decorator(func):
-        if not name:
-            Server.ROUTES[func.__name__] = func
-        else:
-            Server.ROUTES[name] = func
-
-        return func
-
-    return decorator
+log = logging.getLogger(__name__)
 
 
 class IpcServerResponse:
@@ -164,20 +147,29 @@ class Server:
         request: :class:`~aiohttp.web.Request`
             The request made by the client, parsed by aiohttp.
         """
-        print(self.endpoints)
+        log.info("Incoming request to IPC Server.")
+
         websocket = aiohttp.web.WebSocketResponse()
         await websocket.prepare(request)
 
         async for message in websocket:
-            request = json.loads(message.data)
+            request = message.json()
+
+            log.debug("IPC Server < %r", request)
+
             endpoint = request.get("endpoint")
 
             headers = request.get("headers")
 
             if not headers or headers.get("Authorization") != self.secret_key:
+                log.info(
+                    "Received unauthorized request (Invalid or no token provided)."
+                )
+
                 response = {"error": "Invalid or no token provided.", "code": 403}
             else:
                 if not endpoint or endpoint not in self.endpoints:
+                    log.info("Received invalid request (Invalid or no endpoint given).")
                     response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
                     if not self.pass_kwargs:
@@ -192,6 +184,11 @@ class Server:
                             ret = await self.endpoints[endpoint](server_response)
                         response = ret
                     except Exception as error:
+                        log.error(
+                            "Received error while executing %r with %r",
+                            endpoint,
+                            request,
+                        )
                         self.bot.dispatch("ipc_error", endpoint, error)
 
                         response = {
@@ -202,7 +199,8 @@ class Server:
                         }
 
             try:
-                await websocket.send_str(json.dumps(response))
+                log.debug("IPC Server > %r", response)
+                await websocket.send_json(json.dumps(response))
             except TypeError as error:
                 if str(error).startswith("Object of type") and str(error).endswith(
                     "is not JSON serializable"
@@ -212,10 +210,12 @@ class Server:
                         " If you are trying to send a discord.py object,"
                         " please only send the data you need."
                     )
+                    log.error(error_response)
 
                     response = {"error": error_response, "code": 500}
 
-                    await websocket.send_str(json.dumps(response))
+                    await websocket.send_json(json.dumps(response))
+                    log.debug("IPC Server > %r", response)
 
                     raise JSONEncodeError(error_response)
 
@@ -226,6 +226,8 @@ class Server:
         request: :class:`~aiohttp.web.Request`
             The request made by the client, parsed by aiohttp.
         """
+        log.info("Incoming request to Multicast Server.")
+
         websocket = aiohttp.web.WebSocketResponse()
         await websocket.prepare(request)
 
@@ -243,7 +245,9 @@ class Server:
                     "code": 200,
                 }
 
-            await websocket.send_str(json.dumps(response))
+                log.debug("Multicast Server > %r", response)
+
+            await websocket.send_json(json.dumps(response))
 
     async def __start(self, application, port):
         """Start both servers"""

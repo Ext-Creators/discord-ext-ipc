@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="03d241cd-7593-41d3-a18a-040bec27fd2f" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/discord/ext/ipc/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/discord/ext/ipc/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
