@@ -17,7 +17,7 @@ from discord.ext.ipc.client import Client
 from discord.ext.ipc.server import Server
 from discord.ext.ipc.errors import *
 
-__version__ = "2.0.0"
+__version__ = "2.0.1a"
 
 _VersionInfo = namedtuple("_VersionInfo", "major minor micro releaselevel serial")
-version_info = _VersionInfo(major=2, minor=0, micro=0, releaselevel="final", serial=0)
+version_info = _VersionInfo(major=2, minor=0, micro=1, releaselevel="alpha", serial=0)

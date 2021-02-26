@@ -5,14 +5,14 @@ class IpcRoutes(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @ipc.server.route()
-    async def get_member_count(self, data):
+    @ipc.Server.listener()
+    async def get_member_count(self, guild_id):
         guild = self.bot.get_guild(
-            data.guild_id
+            guild_id
         )  # get the guild object using parsed guild_id
 
         return guild.member_count  # return the member count to the client
 
 
 def setup(bot):
-    bot.add_cog(IpcRoutes(bot))
+    bot.ipc.add_cog(IpcRoutes(bot))  # Add the cog using the bot.ipc.add_cog method.
