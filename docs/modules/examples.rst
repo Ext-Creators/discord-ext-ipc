@@ -39,9 +39,9 @@ The bot file:
 
 
     @my_bot.ipc.route()
-    async def get_member_count(data):
+    async def get_member_count(guild_id):
         guild = my_bot.get_guild(
-            data.guild_id
+            guild_id
         )  # get the guild object using parsed guild_id
 
         return guild.member_count  # return the member count to the client
@@ -132,9 +132,9 @@ The cog file:
             self.bot = bot
 
         @ipc.server.route()
-        async def get_member_count(self, data):
+        async def get_member_count(self, guild_id):
             guild = self.bot.get_guild(
-                data.guild_id
+                guild_id
             )  # get the guild object using parsed guild_id
 
             return guild.member_count  # return the member count to the client
