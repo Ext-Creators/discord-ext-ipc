@@ -26,9 +26,7 @@ my_bot = MyBot(command_prefix="!", intents=discord.Intents.all())
 
 @my_bot.ipc.route()
 async def get_member_count(guild_id):
-    guild = my_bot.get_guild(
-        guild_id
-    )  # get the guild object using parsed guild_id
+    guild = my_bot.get_guild(guild_id)  # get the guild object using parsed guild_id
 
     return guild.member_count  # return the member count to the client
 
