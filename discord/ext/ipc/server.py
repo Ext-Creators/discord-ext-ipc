@@ -189,7 +189,7 @@ class Server:
                             endpoint,
                             request,
                         )
-                        self.bot.dispatch("ipc_error", endpoint, error)
+                        self.bot.dispatch("ipc_error", request.get("data", None), endpoint, error)
 
                         response = {
                             "error": "IPC route raised error of type {}".format(
