@@ -147,9 +147,9 @@ class Client:
             log.error(
                 "WebSocket connection unexpectedly closed. IPC Server is unreachable."
             )
-            return {
-                "error": "IPC Server Unreachable, restart client process.",
-                "code": 500,
-            }
+            await self.session.close()
+            await self.init_sock()
+
+            return await self.request(endpoint, **kwargs)
 
         return recv.json()
