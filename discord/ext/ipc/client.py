@@ -145,9 +145,13 @@ class Client:
 
         if recv.type == aiohttp.WSMsgType.CLOSED:
             log.error(
-                "WebSocket connection unexpectedly closed. IPC Server is unreachable."
+                "WebSocket connection unexpectedly closed. IPC Server is unreachable. Attempting reconnection in 5 seconds."
             )
+
             await self.session.close()
+
+            await asyncio.sleep(5)
+
             await self.init_sock()
 
             return await self.request(endpoint, **kwargs)
