@@ -2,6 +2,9 @@ import re
 import setuptools
 
 
+with open("README.rst", "r", encoding="utf-8") as f:
+    readme = f.read()
+    
 with open("discord/ext/ipc/__init__.py") as stream:
     version = re.search(
         r"^__version__\s*=\s*[\'\"]([^\'\"]*)[\'\"]", stream.read(), re.MULTILINE
@@ -49,4 +52,6 @@ setuptools.setup(
     python_requires=">=3.5.3",
     url="https://github.com/Ext-Creators/discord-ext-ipc",
     version=version,
+    long_description=readme,
+    long_description_content_type="text/x-rst"
 )
