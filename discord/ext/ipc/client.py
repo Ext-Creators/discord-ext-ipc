@@ -147,7 +147,7 @@ class Client:
             log.error(
                 "WebSocket connection unexpectedly closed. IPC Server is unreachable. Attempting reconnection in 5 seconds."
             )
-            
+
             await self.session.close()
 
             await asyncio.sleep(5)
