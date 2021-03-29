@@ -160,6 +160,8 @@ class Server:
 
             headers = request.get("headers")
 
+            nonce = request.get("nonce")
+
             if not headers or headers.get("Authorization") != self.secret_key:
                 log.info(
                     "Received unauthorized request (Invalid or no token provided)."
@@ -199,7 +201,7 @@ class Server:
                         }
 
             try:
-                await websocket.send_json(response)
+                await websocket.send_json({"nonce": nonce, "response": response})
                 log.debug("IPC Server > %r", response)
             except TypeError as error:
                 if str(error).startswith("Object of type") and str(error).endswith(

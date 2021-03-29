@@ -14,6 +14,8 @@
 import asyncio
 import logging
 import typing
+import uuid
+import weakref
 
 import aiohttp
 from discord.ext.ipc.errors import *
@@ -56,6 +58,11 @@ class Client:
         self.multicast = None
 
         self.multicast_port = multicast_port
+
+        self._requests = weakref.WeakValueDictionary()
+        self._queue = asyncio.Queue()
+        self._worker = None
+        self._sender = None
 
     @property
     def url(self):
@@ -103,57 +110,98 @@ class Client:
         )
         log.info("Client connected to %s", self.url)
 
+        if self._worker is None:
+            self._worker = self.loop.create_task(self._receive_requests())
+        if self._sender is None:
+            self._sender = self.loop.create_task(self._send_requests())
+
         return self.websocket
 
-    async def request(self, endpoint: str, **kwargs):
+    async def request(self, endpoint: str, timeout: float = None, **kwargs):
         """Make a request to the IPC server process.
 
         Parameters
         ----------
         endpoint: str
             The endpoint to request on the server
+        timeout: float
+            The number of seconds to wait for a response from the server
+            before timing out and raising :exc:`asyncio.TimeoutError`.
+            By default this is ``None`` and waits forever.
         **kwargs
             The data to send to the endpoint
+
+        Raises
+        -------
+        asyncio.TimeoutError
+            If a timeout is provided and it was reached.
         """
         log.info("Requesting IPC Server for %r with %r", endpoint, kwargs)
         if not self.session:
             await self.init_sock()
 
+        # generate a unique identifier for this request
+        # there is probably a better way to do this
+        nonce = uuid.uuid1()
+
         payload = {
             "endpoint": endpoint,
             "data": kwargs,
             "headers": {"Authorization": self.secret_key},
+            "nonce": nonce,
         }
 
-        await self.websocket.send_json(payload)
+        self._queue.put_nowait(payload)
+        self._requests[nonce] = future = asyncio.create_future()
+        return await asyncio.wait_for(future, timeout)
 
-        log.debug("Client > %r", payload)
+    async def _send_requests(self):
+        while True:
+            payload = await self._queue.get()
+            await self.websocket.send_json(payload)
+            log.debug("Client > %r", payload)
 
-        recv = await self.websocket.receive()
+    async def _receive_requests(self):
+        while True:
+            recv = await self.websocket.receive()
+            log.debug("Client < %r", recv)
 
-        log.debug("Client < %r", recv)
+            if recv.type == aiohttp.WSMsgType.PING:
+                log.info("Received request to PING")
+                await self.websocket.ping()
 
-        if recv.type == aiohttp.WSMsgType.PING:
-            log.info("Received request to PING")
-            await self.websocket.ping()
+            elif recv.type == aiohttp.WSMsgType.PONG:
+                log.info("Received PONG")
 
-            return await self.request(endpoint, **kwargs)
+            elif recv.type == aiohttp.WSMsgType.CLOSED:
+                log.error(
+                    "WebSocket connection unexpectedly closed. IPC Server is unreachable. Attempting reconnection in 5 seconds."
+                )
 
-        if recv.type == aiohttp.WSMsgType.PONG:
-            log.info("Received PONG")
-            return await self.request(endpoint, **kwargs)
+                await self.session.close()
 
-        if recv.type == aiohttp.WSMsgType.CLOSED:
-            log.error(
-                "WebSocket connection unexpectedly closed. IPC Server is unreachable. Attempting reconnection in 5 seconds."
-            )
+                await asyncio.sleep(5)
 
-            await self.session.close()
+                await self.init_sock()
+            else:
+                response = recv.json()
+                nonce = response["nonce"]
+                
+                try:
+                    future = self._requests[nonce]
+                except KeyError:
+                    log.error("Received unknown request: %r", response)
+                else:
+                    ret = response.get("response", response)
+                    future.set_result(ret)
 
-            await asyncio.sleep(5)
+    async def close(self):
+        """Close the connection to the websocket."""
+        await self.session.close()
 
-            await self.init_sock()
-
-            return await self.request(endpoint, **kwargs)
-
-        return recv.json()
+        if self._worker is not None:
+            self._worker.cancel()
+            self._worker = None
+        if self._sender is not None:
+            self._sender.cancel()
+            self._sender = None
