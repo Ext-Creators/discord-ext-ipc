@@ -166,11 +166,11 @@ class Server:
                 log.info(
                     "Received unauthorized request (Invalid or no token provided)."
                 )
-                response = {"error": "Invalid or no token provided.", "code": 403}
+                response = {"nonce": nonce, "response": {"error": "Invalid or no token provided.", "code": 403}}
             else:
                 if not endpoint or endpoint not in self.endpoints:
                     log.info("Received invalid request (Invalid or no endpoint given).")
-                    response = {"error": "Invalid or no endpoint given.", "code": 400}
+                    response = {"nonce": nonce, "response": {"error": "Invalid or no endpoint given.", "code": 400}}
                 else:
                     server_response = IpcServerResponse(request)
                     attempted_cls = self.bot.cogs.get(
@@ -184,7 +184,6 @@ class Server:
 
                     try:
                         ret = await self.endpoints[endpoint](*arguments)
-                        response = ret
                     except Exception as error:
                         log.error(
                             "Received error while executing %r with %r",
@@ -194,14 +193,19 @@ class Server:
                         self.bot.dispatch("ipc_error", endpoint, error)
 
                         response = {
-                            "error": "IPC route raised error of type {}".format(
-                                type(error).__name__
-                            ),
-                            "code": 500,
+                            "nonce": nonce,
+                            "response": {
+                                "error": "IPC route raised error of type {}".format(
+                                    type(error).__name__
+                                ),
+                                "code": 500,
+                            },
                         }
+                    else:
+                        response = {"nonce": nonce, "response": ret}
 
             try:
-                await websocket.send_json({"nonce": nonce, "response": response})
+                await websocket.send_json(response)
                 log.debug("IPC Server > %r", response)
             except TypeError as error:
                 if str(error).startswith("Object of type") and str(error).endswith(
@@ -214,7 +218,7 @@ class Server:
                     )
                     log.error(error_response)
 
-                    response = {"error": error_response, "code": 500}
+                    response = {"nonce": nonce, "response": {"error": error_response, "code": 500}}
 
                     await websocket.send_json(response)
                     log.debug("IPC Server > %r", response)
