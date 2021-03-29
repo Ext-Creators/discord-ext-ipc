@@ -46,10 +46,10 @@ class Client:
         self.host = host
         self.port = port
 
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session = None  # type: Optional[aiohttp.ClientSession]
 
-        self.websocket: Optional[aiohttp.ClientWebSocketResponse] = None
-        self.multicast: Optional[aiohttp.ClientWebSocketResponse] = None
+        self.websocket = None  # type: Optional[aiohttp.ClientWebSocketResponse]
+        self.multicast = None  # type: Optional[aiohttp.ClientWebSocketResponse]
 
         self.multicast_port = multicast_port
         self.url = "ws://{0.host}:{0.multicast_port}".format(self)
