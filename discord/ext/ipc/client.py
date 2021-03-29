@@ -186,7 +186,7 @@ class Client:
             else:
                 response = recv.json()
                 nonce = response["nonce"]
-                
+
                 try:
                     future = self._requests[nonce]
                 except KeyError:
