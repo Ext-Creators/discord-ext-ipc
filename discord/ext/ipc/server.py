@@ -43,7 +43,7 @@ class IpcServerResponse:
         self._json = data
         self.length = len(data)
 
-        self.endpoint: str = data["endpoint"]
+        self.endpoint = data["endpoint"]  # type: str
 
         for key, value in data["data"].items():
             setattr(self, key, value)
@@ -62,7 +62,7 @@ class IpcServerResponse:
 
 
 class Server:
-    ROUTES: Dict[str, F] = {}
+    ROUTES = {}  # type: Dict[str, F]
 
     def __init__(
         self,
@@ -81,13 +81,13 @@ class Server:
         self.host = host
         self.port = port
 
-        self._server: Optional[aiohttp.web.Application] = None
+        self._server = None  # type: Optional[aiohttp.web.Application]
         self._multicast_server = None
 
         self.do_multicast = do_multicast
         self.multicast_port = multicast_port
 
-        self.endpoints = {}
+        self.endpoints = {}  # type: Dict[str, Callable[..., Any]]
 
     def route(self, name: Optional[str] = None) -> Callable[[F], F]:
         """Used to register a coroutine as an endpoint"""
@@ -105,7 +105,7 @@ class Server:
 
         self.ROUTES = {}
 
-    async def handle_accept(self, request):
+    async def handle_accept(self, request: aiohttp.web.BaseRequest) -> None:
         self.update_endpoints()
 
         websocket = aiohttp.web.WebSocketResponse()
