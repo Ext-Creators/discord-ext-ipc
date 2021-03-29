@@ -166,11 +166,20 @@ class Server:
                 log.info(
                     "Received unauthorized request (Invalid or no token provided)."
                 )
-                response = {"nonce": nonce, "response": {"error": "Invalid or no token provided.", "code": 403}}
+                response = {
+                    "nonce": nonce,
+                    "response": {"error": "Invalid or no token provided.", "code": 403},
+                }
             else:
                 if not endpoint or endpoint not in self.endpoints:
                     log.info("Received invalid request (Invalid or no endpoint given).")
-                    response = {"nonce": nonce, "response": {"error": "Invalid or no endpoint given.", "code": 400}}
+                    response = {
+                        "nonce": nonce,
+                        "response": {
+                            "error": "Invalid or no endpoint given.",
+                            "code": 400,
+                        },
+                    }
                 else:
                     server_response = IpcServerResponse(request)
                     attempted_cls = self.bot.cogs.get(
@@ -218,7 +227,10 @@ class Server:
                     )
                     log.error(error_response)
 
-                    response = {"nonce": nonce, "response": {"error": error_response, "code": 500}}
+                    response = {
+                        "nonce": nonce,
+                        "response": {"error": error_response, "code": 500},
+                    }
 
                     await websocket.send_json(response)
                     log.debug("IPC Server > %r", response)
