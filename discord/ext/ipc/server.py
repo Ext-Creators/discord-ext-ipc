@@ -190,7 +190,9 @@ class Server:
         self.ROUTES = {}
 
     @staticmethod
-    async def __handle_route(method: callable, data: Union[IpcServerResponse, dict], cog = None):
+    async def __handle_route(
+        method: callable, data: Union[IpcServerResponse, dict], cog = None
+    ):
         args = []
 
         if cog:
@@ -248,9 +250,13 @@ class Server:
                         if hasattr(endpoint_meth, "__ipc_cog_ref__"):
                             cog = self.bot.get_cog(endpoint_meth.__ipc_cog_ref__)
 
-                            response = await self.__handle_route(endpoint_meth, server_response, cog)
+                            response = await self.__handle_route(
+                                endpoint_meth, server_response, cog
+                            )
                         else:
-                            response = await self.__handle_route(endpoint_meth, server_response)
+                            response = await self.__handle_route(
+                                endpoint_meth, server_response
+                            )
 
                     except Exception as error:
                         log.error(
