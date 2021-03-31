@@ -149,9 +149,7 @@ class Client:
             )
 
             await self.session.close()
-
             await asyncio.sleep(5)
-
             await self.init_sock()
 
             return await self.request(endpoint, **kwargs)

@@ -12,11 +12,41 @@
 """
 
 import logging
+from typing import Union
 
 import aiohttp.web
 from discord.ext.ipc.errors import *
 
 log = logging.getLogger(__name__)
+
+
+def route(name: str = None):
+    """
+    Used to register a coroutine as an endpoint when you don't have
+    access to an instance of :class:`.Server`
+
+    .. depreciated:: 2.1.0
+
+    Parameters
+    ----------
+    name: str
+        The endpoint name. If not provided the method name will be
+        used.
+    """
+
+    def decorator(func):
+        cog_name = func.__qualname__.split(".")[0]
+
+        if not name:
+            Server.ROUTES[func.__name__] = func
+        else:
+            Server.ROUTES[name] = func
+
+        setattr(func, "__ipc_cog_ref__", cog_name)
+
+        return func
+
+    return decorator
 
 
 class IpcServerResponse:
@@ -59,8 +89,10 @@ class Server:
     multicast_port: int
         The port to run the multicasting server on. Defaults to 20000
     pass_kwargs: bool
-        Whether to use kwargs for ipc routes instead of the IpcServerResponse object. Defaults to True
+        Whether to use kwargs for ipc routes instead of the IpcServerResponse object. Defaults to False
     """
+
+    ROUTES = {}
 
     def __init__(
         self,
@@ -70,7 +102,7 @@ class Server:
         secret_key: str = None,
         do_multicast: bool = True,
         multicast_port: int = 20000,
-        pass_kwargs: bool = True,
+        pass_kwargs: bool = False,
     ):
         self.bot = bot
         self.loop = bot.loop
@@ -92,6 +124,9 @@ class Server:
 
     def add_cog(self, cog):
         """Register a cog which has IPC listeners within it.
+
+        .. versionadded:: 2.1.0
+
         Parameters
         ----------
         cog: callable
@@ -129,6 +164,9 @@ class Server:
     def listener(name: str = None):
         """Used to register a coroutine as an endpoint when you
         do not have access to an instance of :class:`.Server`.
+
+        .. versionadded:: 2.1.0
+
         Parameters
         ----------
         name: str
@@ -142,6 +180,29 @@ class Server:
 
         return decorator
 
+    def update_endpoints(self):
+        """Called internally to update the server's endpoints for cog routes.
+
+        .. depreciated:: 2.1.0
+        """
+        self.endpoints = {**self.endpoints, **self.ROUTES}
+
+        self.ROUTES = {}
+
+    @staticmethod
+    async def __handle_route(method: callable, data: Union[IpcServerResponse, dict], cog = None):
+        args = []
+
+        if cog:
+            args.append(cog)
+
+        if isinstance(data, IpcServerResponse):
+            result = await method(*args, data)
+        else:
+            result = await method(*args, **data)
+
+        return result
+
     async def handle_accept(self, request: aiohttp.web.Request):
         """Handles websocket requests from the client process.
 
@@ -151,6 +212,8 @@ class Server:
             The request made by the client, parsed by aiohttp.
         """
         log.info("Incoming request to IPC Server.")
+
+        self.update_endpoints()
 
         websocket = aiohttp.web.WebSocketResponse()
         await websocket.prepare(request)
@@ -182,10 +245,13 @@ class Server:
                     try:
                         endpoint_meth = self.endpoints[endpoint]
 
-                        if isinstance(server_response, dict):
-                            response = await endpoint_meth(**server_response)
+                        if hasattr(endpoint_meth, "__ipc_cog_ref__"):
+                            cog = self.bot.get_cog(endpoint_meth.__ipc_cog_ref__)
+
+                            response = await self.__handle_route(endpoint_meth, server_response, cog)
                         else:
-                            response = await endpoint_meth(server_response)
+                            response = await self.__handle_route(endpoint_meth, server_response)
+
                     except Exception as error:
                         log.error(
                             "Received error while executing %r with %r",
