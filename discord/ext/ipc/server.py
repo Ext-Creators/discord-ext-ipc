@@ -25,7 +25,7 @@ def route(name: str = None):
     Used to register a coroutine as an endpoint when you don't have
     access to an instance of :class:`.Server`
 
-    .. depreciated:: 2.1.0
+    .. deprecated:: 2.1.0
 
     Parameters
     ----------
@@ -183,7 +183,7 @@ class Server:
     def update_endpoints(self):
         """Called internally to update the server's endpoints for cog routes.
 
-        .. depreciated:: 2.1.0
+        .. deprecated:: 2.1.0
         """
         self.endpoints = {**self.endpoints, **self.ROUTES}
 
