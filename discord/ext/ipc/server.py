@@ -129,7 +129,7 @@ class Server:
 
         Parameters
         ----------
-        cog: callable
+        cog: :class:`~discord.ext.commands.Cog`
             The cog to register.
         """
         self.bot.add_cog(cog)
