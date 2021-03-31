@@ -191,7 +191,7 @@ class Server:
 
     @staticmethod
     async def __handle_route(
-        method: callable, data: Union[IpcServerResponse, dict], cog = None
+        method: callable, data: Union[IpcServerResponse, dict], cog=None
     ):
         args = []
 
