@@ -12,7 +12,6 @@
 """
 
 import logging
-from typing import Union
 
 import aiohttp.web
 from discord.ext.ipc.errors import *
@@ -35,14 +34,14 @@ def route(name: str = None):
     """
 
     def decorator(func):
-        cog_name = func.__qualname__.split(".")[0]
+        cog_name = func.__self__.__class__.__name__
 
         if not name:
             Server.ROUTES[func.__name__] = func
         else:
             Server.ROUTES[name] = func
 
-        setattr(func, "__ipc_cog_ref__", cog_name)
+        func.__ipc_cog_ref__ = cog_name
 
         return func
 
@@ -137,8 +136,10 @@ class Server:
         for method in dir(cog):
             method = getattr(cog, method)
 
-            if hasattr(method, "__ipc_route_name__"):
+            try:
                 self.endpoints[method.__ipc_route_name__] = method
+            except AttributeError:
+                pass
 
     def route(self, name: str = None):
         """Used to register a coroutine as an endpoint when you have
@@ -174,7 +175,7 @@ class Server:
         """
 
         def decorator(func):
-            setattr(func, "__ipc_route_name__", name or func.__name__)
+            func.__ipc_route_name__ = name or func.__name__
 
             return func
 
@@ -191,7 +192,7 @@ class Server:
 
     @staticmethod
     async def __handle_route(
-        method: callable, data: Union[IpcServerResponse, dict], cog=None
+        method: callable, data, cog=None
     ):
         args = []
 
@@ -247,13 +248,13 @@ class Server:
                     try:
                         endpoint_meth = self.endpoints[endpoint]
 
-                        if hasattr(endpoint_meth, "__ipc_cog_ref__"):
+                        try:
                             cog = self.bot.get_cog(endpoint_meth.__ipc_cog_ref__)
 
                             response = await self.__handle_route(
                                 endpoint_meth, server_response, cog
                             )
-                        else:
+                        except AttributeError:
                             response = await self.__handle_route(
                                 endpoint_meth, server_response
                             )

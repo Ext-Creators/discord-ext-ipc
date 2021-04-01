@@ -25,3 +25,5 @@ It then calls the method linked to said route and returns the payload to the cli
 
 .. autoclass:: Server
     :members:
+
+.. autofunction:: route
