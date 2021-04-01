@@ -24,10 +24,10 @@ class Client:
 
     def __init__(
         self,
-        host: str = "localhost",
-        port: int = None,
-        multicast_port: int = 20000,
-        secret_key: typing.Union[str, bytes] = None,
+        host="localhost",
+        port=None,
+        multicast_port=20000,
+        secret_key=None
     ):
         """Constructor"""
         self.loop = asyncio.get_event_loop()
@@ -92,7 +92,7 @@ class Client:
 
         return self.websocket
 
-    async def request(self, endpoint: str, **kwargs):
+    async def request(self, endpoint, **kwargs):
         """Make a request to the IPC server process.
 
         Parameters

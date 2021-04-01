@@ -6,7 +6,7 @@ from discord.ext.ipc.errors import *
 log = logging.getLogger(__name__)
 
 
-def route(name: str = None):
+def route(name=None):
     """
     Used to register a coroutine as an endpoint when you don't have
     access to an instance of :class:`.Server`
@@ -30,7 +30,7 @@ def route(name: str = None):
 
 
 class IpcServerResponse:
-    def __init__(self, data: dict):
+    def __init__(self, data):
         self._json = data
         self.length = len(data)
 
@@ -75,11 +75,11 @@ class Server:
     def __init__(
         self,
         bot,
-        host: str = "localhost",
-        port: int = 8765,
-        secret_key: str = None,
-        do_multicast: bool = True,
-        multicast_port: int = 20000,
+        host="localhost",
+        port=8765,
+        secret_key=None,
+        do_multicast=True,
+        multicast_port=20000,
     ):
         self.bot = bot
         self.loop = bot.loop
@@ -97,7 +97,7 @@ class Server:
 
         self.endpoints = {}
 
-    def route(self, name: str = None):
+    def route(self, name=None):
         """Used to register a coroutine as an endpoint when you have
         access to an instance of :class:`.Server`.
 
@@ -123,7 +123,7 @@ class Server:
 
         self.ROUTES = {}
 
-    async def handle_accept(self, request: aiohttp.web.Request):
+    async def handle_accept(self, request):
         """Handles websocket requests from the client process.
 
         Parameters
@@ -206,7 +206,7 @@ class Server:
 
                     raise JSONEncodeError(error_response)
 
-    async def handle_multicast(self, request: aiohttp.web.Request):
+    async def handle_multicast(self, request):
         """Handles multicasting websocket requests from the client.
 
         Parameters
