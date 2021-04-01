@@ -2,6 +2,6 @@
 __pycache__/
 
 # python package-index
-/build/
-/dist/
-/*.egg-info/
+build/
+dist/
+*.egg-info/

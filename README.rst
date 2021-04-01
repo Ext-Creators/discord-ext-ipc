@@ -33,24 +33,16 @@
 Installation
 ------------
 
+**Python >=3.5.3 is required.**
+
 .. code-block:: sh
 
-    # Windows
-    py -3 -m pip install --upgrade discord-ext-ipc
-
-    # Linux
-    python3 -m pip install --upgrade discord-ext-ipc
+    pip install --upgrade discord-ext-ipc
 
 
-Usage
------
+See Also
+--------
 
-For examples using Quart, refer to `the examples directory <https://github.com/Ext-Creators/discord-ext-ipc/tree/master/examples>`_.
-
-
-Running
--------
-
-To run the IPC Server, simply run your bot as normal. Once the `on_ipc_ready` event has been dispatched, run your webserver.
-
-For support join the `Ext-Creators Discord Server <https://discord.gg/h3q42Er>`_.
+- The `documentation <https://discord-ext-ipc.readthedocs.io/>`_.
+- The `usage examples <https://github.com/Ext-Creators/discord-ext-ipc/tree/master/examples>`_.
+- The `Ext-Creators Discord <https://discord.gg/fwYfYZJGck>`_.

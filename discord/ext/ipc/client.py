@@ -1,16 +1,3 @@
-"""
-    Copyright 2021 Ext-Creators
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-        http://www.apache.org/licenses/LICENSE-2.0
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-"""
-
 import asyncio
 import logging
 import typing
@@ -37,10 +24,10 @@ class Client:
 
     def __init__(
         self,
-        host: str = "localhost",
-        port: int = None,
-        multicast_port: int = 20000,
-        secret_key: typing.Union[str, bytes] = None,
+        host="localhost",
+        port=None,
+        multicast_port=20000,
+        secret_key=None
     ):
         """Constructor"""
         self.loop = asyncio.get_event_loop()
@@ -105,7 +92,7 @@ class Client:
 
         return self.websocket
 
-    async def request(self, endpoint: str, **kwargs):
+    async def request(self, endpoint, **kwargs):
         """Make a request to the IPC server process.
 
         Parameters
