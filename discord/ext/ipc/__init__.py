@@ -7,5 +7,5 @@ from discord.ext.ipc.errors import *
 
 _VersionInfo = collections.namedtuple("_VersionInfo", "major minor micro release serial")
 
-version = "2.0.0"
-version_info = _VersionInfo(2, 0, 0, "final", 0)
+version = "2.1.0a"
+version_info = _VersionInfo(2, 1, 0, "alpha", 0)
