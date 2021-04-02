@@ -39,6 +39,7 @@ packages = [
 ]
 
 project_urls = {
+    "Documentation": "https://discord-ext-ipc.readthedocs.io",
     "Issue Tracker": "https://github.com/Ext-Creators/discord-ext-ipc/issues",
     "Source": "https://github.com/Ext-Creators/discord-ext-ipc",
 }
