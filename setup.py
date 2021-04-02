@@ -22,10 +22,6 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-install_requires = [
-    "discord.py",
-]
-
 extras_require = {
     "docs": [
         "sphinx",
@@ -33,6 +29,9 @@ extras_require = {
         "sphinx-rtd-theme",
     ],
 }
+
+with open("requirements.txt") as stream:
+    install_requires = stream.read().splitlines()
 
 packages = [
     "discord.ext.ipc",
