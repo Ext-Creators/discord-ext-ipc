@@ -3,9 +3,7 @@ from discord.ext import ipc
 
 
 app = Quart(__name__)
-ipc_client = ipc.Client(
-    secret_key="my_secret_key"
-)  # secret_key must be the same as your server
+ipc_client = ipc.Client(secret_key="my_secret_key")  # secret_key must be the same as your server
 
 
 @app.route("/")
