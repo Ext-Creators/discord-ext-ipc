@@ -4,10 +4,12 @@ import setuptools
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
+    "Framework :: AsyncIO",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
+    "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.5",
@@ -15,15 +17,15 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Communications",
+    "Topic :: Documentation",
+    "Topic :: Documentation :: Sphinx",
     "Topic :: Internet",
     "Topic :: Software Development",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Libraries :: Python Modules",
-]
-
-install_requires = [
-    "discord.py",
 ]
 
 extras_require = {
@@ -34,11 +36,15 @@ extras_require = {
     ],
 }
 
+with open("requirements.txt") as stream:
+    install_requires = stream.read().splitlines()
+
 packages = [
     "discord.ext.ipc",
 ]
 
 project_urls = {
+    "Documentation": "https://discord-ext-ipc.readthedocs.io",
     "Issue Tracker": "https://github.com/Ext-Creators/discord-ext-ipc/issues",
     "Source": "https://github.com/Ext-Creators/discord-ext-ipc",
 }
