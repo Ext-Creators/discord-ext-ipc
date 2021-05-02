@@ -1,4 +1,7 @@
-class IPCError(Exception):
+from discord import DiscordException
+
+
+class IPCError(DiscordException):
     """Base IPC exception class"""
 
     pass

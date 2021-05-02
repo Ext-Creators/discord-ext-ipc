@@ -218,9 +218,7 @@ class Server:
             headers = request.get("headers")
 
             if not headers or headers.get("Authorization") != self.secret_key:
-                log.info(
-                    "Received unauthorized request (Invalid or no token provided)."
-                )
+                log.info("Received unauthorized request (Invalid or no token provided).")
                 response = {"error": "Invalid or no token provided.", "code": 403}
             else:
                 if not endpoint or endpoint not in self.endpoints:
@@ -333,8 +331,6 @@ class Server:
             self._multicast_server = aiohttp.web.Application()
             self._multicast_server.router.add_route("GET", "/", self.handle_multicast)
 
-            self.loop.run_until_complete(
-                self.__start(self._multicast_server, self.multicast_port)
-            )
+            self.loop.run_until_complete(self.__start(self._multicast_server, self.multicast_port))
 
         self.loop.run_until_complete(self.__start(self._server, self.port))

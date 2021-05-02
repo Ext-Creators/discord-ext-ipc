@@ -28,6 +28,7 @@
 
     <h1 align="center">discord-ext-ipc</h1>
     <p align="center">A discord.py extension for inter-process communication.</p>
+    <h6 align="center">Copyright 2020-present Ext-Creators</h6>
 
 
 Installation
