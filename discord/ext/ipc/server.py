@@ -11,6 +11,8 @@ def route(name=None):
     Used to register a coroutine as an endpoint when you don't have
     access to an instance of :class:`.Server`
 
+    .. deprecated:: 2.1.0
+
     Parameters
     ----------
     name: str
@@ -19,10 +21,14 @@ def route(name=None):
     """
 
     def decorator(func):
+        cog_name = func.__self__.__class__.__name__
+
         if not name:
             Server.ROUTES[func.__name__] = func
         else:
             Server.ROUTES[name] = func
+
+        func.__ipc_cog_ref__ = cog_name
 
         return func
 
@@ -68,6 +74,8 @@ class Server:
         Turn multicasting on/off. Defaults to True
     multicast_port: int
         The port to run the multicasting server on. Defaults to 20000
+    pass_kwargs: bool
+        Whether to use kwargs for ipc routes instead of the IpcServerResponse object. Defaults to False
     """
 
     ROUTES = {}
@@ -75,11 +83,12 @@ class Server:
     def __init__(
         self,
         bot,
-        host="localhost",
-        port=8765,
-        secret_key=None,
-        do_multicast=True,
-        multicast_port=20000,
+        host = "localhost",
+        port = 8765,
+        secret_key = None,
+        do_multicast = True,
+        multicast_port = 20000,
+        pass_kwargs = False,
     ):
         self.bot = bot
         self.loop = bot.loop
@@ -95,7 +104,29 @@ class Server:
         self.do_multicast = do_multicast
         self.multicast_port = multicast_port
 
+        self.pass_kwargs = pass_kwargs
+
         self.endpoints = {}
+
+    def add_cog(self, cog):
+        """Register a cog which has IPC listeners within it.
+
+        .. versionadded:: 2.1.0
+
+        Parameters
+        ----------
+        cog: :class:`~discord.ext.commands.Cog`
+            The cog to register.
+        """
+        self.bot.add_cog(cog)
+
+        for method in dir(cog):
+            method = getattr(cog, method)
+
+            try:
+                self.endpoints[method.__ipc_route_name__] = method
+            except AttributeError:
+                pass
 
     def route(self, name=None):
         """Used to register a coroutine as an endpoint when you have
@@ -117,11 +148,50 @@ class Server:
 
         return decorator
 
+    @staticmethod
+    def listener(name: str = None):
+        """Used to register a coroutine as an endpoint when you
+        do not have access to an instance of :class:`.Server`.
+
+        .. versionadded:: 2.1.0
+
+        Parameters
+        ----------
+        name: str
+            The endpoint name. If not provided the method name will be used.
+        """
+
+        def decorator(func):
+            func.__ipc_route_name__ = name or func.__name__
+
+            return func
+
+        return decorator
+
     def update_endpoints(self):
-        """Called internally to update the server's endpoints for cog routes."""
+        """Called internally to update the server's endpoints for cog routes.
+
+        .. deprecated:: 2.1.0
+        """
         self.endpoints = {**self.endpoints, **self.ROUTES}
 
         self.ROUTES = {}
+
+    @staticmethod
+    async def __handle_route(
+        method: callable, data, cog=None
+    ):
+        args = []
+
+        if cog:
+            args.append(cog)
+
+        if isinstance(data, IpcServerResponse):
+            result = await method(*args, data)
+        else:
+            result = await method(*args, **data)
+
+        return result
 
     async def handle_accept(self, request):
         """Handles websocket requests from the client process.
@@ -131,9 +201,9 @@ class Server:
         request: :class:`~aiohttp.web.Request`
             The request made by the client, parsed by aiohttp.
         """
-        self.update_endpoints()
+        log.info("Incoming request to IPC Server.")
 
-        log.info("Initiating IPC Server.")
+        self.update_endpoints()
 
         websocket = aiohttp.web.WebSocketResponse()
         await websocket.prepare(request)
@@ -155,19 +225,25 @@ class Server:
                     log.info("Received invalid request (Invalid or no endpoint given).")
                     response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
-                    server_response = IpcServerResponse(request)
-                    attempted_cls = self.bot.cogs.get(
-                        self.endpoints[endpoint].__qualname__.split(".")[0]
-                    )
-
-                    if attempted_cls:
-                        arguments = (attempted_cls, server_response)
+                    if self.pass_kwargs:
+                        server_response = request["data"]
                     else:
-                        arguments = (server_response,)
+                        server_response = IpcServerResponse(request)
 
                     try:
-                        ret = await self.endpoints[endpoint](*arguments)
-                        response = ret
+                        endpoint_meth = self.endpoints[endpoint]
+
+                        try:
+                            cog = self.bot.get_cog(endpoint_meth.__ipc_cog_ref__)
+
+                            response = await self.__handle_route(
+                                endpoint_meth, server_response, cog
+                            )
+                        except AttributeError:
+                            response = await self.__handle_route(
+                                endpoint_meth, server_response
+                            )
+
                     except Exception as error:
                         log.error(
                             "Received error while executing %r with %r",
@@ -212,7 +288,7 @@ class Server:
         request: :class:`~aiohttp.web.Request`
             The request made by the client, parsed by aiohttp.
         """
-        log.info("Initiating Multicast Server.")
+        log.info("Incoming request to Multicast Server.")
         websocket = aiohttp.web.WebSocketResponse()
         await websocket.prepare(request)
 
