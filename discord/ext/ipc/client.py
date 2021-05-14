@@ -14,7 +14,7 @@
 import asyncio
 import logging
 import typing
-import uuid
+import os
 import weakref
 
 import aiohttp
