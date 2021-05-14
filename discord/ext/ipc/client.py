@@ -140,9 +140,7 @@ class Client:
         if not self.session:
             await self.init_sock()
 
-        # generate a unique identifier for this request
-        # there is probably a better way to do this
-        nonce = uuid.uuid1()
+        nonce = os.urandom(16).hex()
 
         payload = {
             "endpoint": endpoint,
