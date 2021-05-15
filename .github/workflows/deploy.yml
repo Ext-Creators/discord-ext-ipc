@@ -9,7 +9,7 @@ jobs:
 
     env:
       DOCS_REPOSITORY: ${{ github.repository_owner }}/docs
-      DOCS_DIRECTORY: ./docs/${{ github.event.repository.name }}/latests
+      DOCS_DIRECTORY: ./docs/${{ github.event.repository.name }}/latest
       PYTHON_VERSION: 3.9
 
     steps:
