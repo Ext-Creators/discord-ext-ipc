@@ -1,6 +1,9 @@
 name: Deploy
 
-on: [ push ]
+on:
+  push:
+  release:
+    types: [ created ]
 
 jobs:
   job:
@@ -9,7 +12,8 @@ jobs:
 
     env:
       DOCS_REPOSITORY: ${{ github.repository_owner }}/docs
-      DOCS_DIRECTORY: ./docs/${{ github.event.repository.name }}/latest
+      DOCS_DIRECTORY: ./docs/${{ github.event.repository.name }}
+      DOCS_DIRECTORY_LATEST_NAME: dotcom
       PYTHON_VERSION: 3.9
 
     steps:
@@ -37,13 +41,26 @@ jobs:
         python -m pip install --upgrade .[docs]
 
     - name: Build
+      if: ${{ github.event_name == 'push' }}
       run: |
-        if [ -d ${{ env.DOCS_DIRECTORY }} ]; then rm -r ${{ env.DOCS_DIRECTORY }}; fi
-        python -m sphinx -b dirhtml -a -E -n -T -W --keep-going ./${{ github.event.repository.name }}/docs ${{ env.DOCS_DIRECTORY }}
-        cd ${{ env.DOCS_DIRECTORY }}
+        if [ -d ${{ env.DOCS_DIRECTORY }}/${{ env.DOCS_DIRECTORY_LATEST_NAME }} ]; then rm -r ${{ env.DOCS_DIRECTORY }}/${{ env.DOCS_DIRECTORY_LATEST_NAME }}; fi
+        python -m sphinx -b dirhtml -a -E -n -T -W --keep-going ./${{ github.event.repository.name }}/docs ${{ env.DOCS_DIRECTORY }}/${{ env.DOCS_DIRECTORY_LATEST_NAME }}
+        cd ${{ env.DOCS_DIRECTORY }}/${{ env.DOCS_DIRECTORY_LATEST_NAME }}
         rm -r .doctrees
         rm -r _sources
         rm .buildinfo
+
+    - name: Build
+      if: ${{ github.event_name == 'release' }}
+      run: |
+        if [ -d ${{ env.DOCS_DIRECTORY }}/${{ github.event.release.tag_name }} ]; then rm -r ${{ env.DOCS_DIRECTORY }}/${{ github.event.release.tag_name }}; fi
+        python -m sphinx -b dirhtml -a -E -n -T -W --keep-going ./${{ github.event.repository.name }}/docs ${{ env.DOCS_DIRECTORY }}/${{ github.event.release.tag_name }}
+        cd ${{ env.DOCS_DIRECTORY }}/${{ github.event.release.tag_name }}
+        rm -r .doctrees
+        rm -r _sources
+        rm .buildinfo
+        cd ../
+        cp -r ${{ github.event.release.tag_name }} stable
 
     - name: Push
       continue-on-error: true
