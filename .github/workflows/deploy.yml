@@ -19,6 +19,7 @@ jobs:
       PULL_PATH: docs
 
       PUSH_REPOSITORY: ${{ github.repository_owner }}/docs
+      PUSH_ROOT_PATH: `x=${{ github.event.repository.name }}; echo ${x#discord-ext-}`
       PUSH_LATEST_PATH: latest
       PUSH_STABLE_PATH: stable
 
@@ -52,17 +53,17 @@ jobs:
     - name: Build
       if: ${{ github.event_name == 'push' }}
       run: |
-        if [ -d ./docs/${{ github.event.repository.name }}/${{ env.PUSH_LATEST_PATH }} ]; then rm -r ./docs/${{ github.event.repository.name }}/${{ env.PUSH_LATEST_PATH }}; fi
-        python -m sphinx ${{ env.SPHINX_OPTIONS }} ./${{ github.event.repository.name }}/${{ env.PULL_PATH }} ./docs/${{ github.event.repository.name }}/${{ env.PUSH_LATEST_PATH }}
-        x=${{ github.event.repository.name }}/${{ env.PUSH_LATEST_PATH }}; y=$x; while [ $y != ${y%/*} ]; do y=${y%/*}; echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url='"${x#$y/}"'" /></head><body></body></html>' > ./docs/$y/index.html; done
+        if [ -d ./docs/${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_LATEST_PATH }} ]; then rm -r ./docs/${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_LATEST_PATH }}; fi
+        python -m sphinx ${{ env.SPHINX_OPTIONS }} ./${{ github.event.repository.name }}/${{ env.PULL_PATH }} ./docs/${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_LATEST_PATH }}
+        x=${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_LATEST_PATH }}; y=$x; while [ $y != ${y%/*} ]; do y=${y%/*}; echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url='"${x#$y/}"'" /></head><body></body></html>' > ./docs/$y/index.html; done
 
     - name: Build
       if: ${{ github.event_name == 'release' }}
       run: |
-        if [ -d ./docs/${{ github.event.repository.name }}/${{ github.event.release.tag_name }} ]; then rm -r ./docs/${{ github.event.repository.name }}/${{ github.event.release.tag_name }}; fi
-        python -m sphinx ${{ env.SPHINX_OPTIONS }} ./${{ github.event.repository.name }}/${{ env.PULL_PATH }} ./docs/${{ github.event.repository.name }}/${{ github.event.release.tag_name }}
-        if [ -h ./docs/${{ github.event.repository.name }}/${{ env.PUSH_STABLE_PATH }} ]; then rm ./docs/${{ github.event.repository.name }}/${{ env.PUSH_STABLE_PATH }}; fi
-        ln -s ${{ github.event.release.tag_name }} ./docs/${{ github.event.repository.name }}/${{ env.PUSH_STABLE_PATH }}
+        if [ -d ./docs/${{ env.PUSH_ROOT_PATH }}/${{ github.event.release.tag_name }} ]; then rm -r ./docs/${{ env.PUSH_ROOT_PATH }}/${{ github.event.release.tag_name }}; fi
+        python -m sphinx ${{ env.SPHINX_OPTIONS }} ./${{ github.event.repository.name }}/${{ env.PULL_PATH }} ./docs/${{ env.PUSH_ROOT_PATH }}/${{ github.event.release.tag_name }}
+        if [ -h ./docs/${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_STABLE_PATH }} ]; then rm ./docs/${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_STABLE_PATH }}; fi
+        ln -s ${{ github.event.release.tag_name }} ./docs/${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_STABLE_PATH }}
 
     - name: Push
       continue-on-error: true
