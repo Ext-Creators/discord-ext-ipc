@@ -15,6 +15,8 @@ jobs:
       AUTH_LOGIN: ShineyDev
       AUTH_TOKEN: ${{ secrets.DOCS_TOKEN }}
 
+      COMMIT_MESSAGE: update docs for ${{ github.repository }}
+
       PULL_INSTALL: .[docs]
       PULL_PATH: docs
 
@@ -49,7 +51,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install --upgrade ${{ env.PULL_INSTALL }}
-
     - name: Build
       if: ${{ github.event_name == 'push' }}
       run: |
@@ -57,9 +58,8 @@ jobs:
         python -m sphinx ${{ env.SPHINX_OPTIONS }} ./${{ github.event.repository.name }}/${{ env.PULL_PATH }} ./docs/${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_LATEST_PATH }}
         x=${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_LATEST_PATH }}; y=$x; while [ $y != ${y%/*} ]; do y=${y%/*}; echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url='"${x#$y/}"'" /></head><body></body></html>' > ./docs/$y/index.html; done
         if [ ! -f ./docs/index.json ]; then echo {} > ./docs/index.json ; fi
-        jq 'if has("'"${{ env.PUSH_ROOT_PATH }}"'") then (.'"${{ env.PUSH_ROOT_PATH }}"'.latest = "${{ env.PUSH_LATEST_PATH }}" | .'"${{ env.PUSH_ROOT_PATH }}"'.stable = "${{ env.PUSH_STABLE_PATH }}") else (.'"${{ env.PUSH_ROOT_PATH }}"' = {latest: "${{ env.PUSH_STABLE_PATH }}", stable: "${{ env.PUSH_STABLE_PATH }}", tags: []}) end' ./docs/index.json > ./docs/temp.json
+        jq 'if has("'"${{ env.PUSH_ROOT_PATH }}"'") then (.'"${{ env.PUSH_ROOT_PATH }}"'.latest = "${{ env.PUSH_LATEST_PATH }}" | .'"${{ env.PUSH_ROOT_PATH }}"'.stable = "${{ env.PUSH_STABLE_PATH }}") else (.'"${{ env.PUSH_ROOT_PATH }}"' = {latest: "${{ env.PUSH_LATEST_PATH }}", stable: "${{ env.PUSH_STABLE_PATH }}", tags: []}) end' ./docs/index.json > ./docs/temp.json
         mv ./docs/temp.json ./docs/index.json
-
     - name: Build
       if: ${{ github.event_name == 'release' }}
       run: |
@@ -68,9 +68,8 @@ jobs:
         if [ -h ./docs/${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_STABLE_PATH }} ]; then rm ./docs/${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_STABLE_PATH }}; fi
         ln -s ${{ github.event.release.tag_name }} ./docs/${{ env.PUSH_ROOT_PATH }}/${{ env.PUSH_STABLE_PATH }}
         if [ ! -f ./docs/index.json ]; then echo {} > ./docs/index.json ; fi
-        jq 'if has("'"${{ env.PUSH_ROOT_PATH }}"'") then (.'"${{ env.PUSH_ROOT_PATH }}"'.latest = "${{ env.PUSH_LATEST_PATH }}" | .'"${{ env.PUSH_ROOT_PATH }}"'.stable = "${{ env.PUSH_STABLE_PATH }}" | .'"${{ env.PUSH_ROOT_PATH }}"'.tags |= . + ["${{ github.event.release.tag_name }}"]) else (.'"${{ env.PUSH_ROOT_PATH }}"' = {latest: "${{ env.PUSH_STABLE_PATH }}", stable: "${{ env.PUSH_STABLE_PATH }}", tags: ["${{ github.event.release.tag_name }}"]}) end' ./docs/index.json > ./docs/temp.json
+        jq 'if has("'"${{ env.PUSH_ROOT_PATH }}"'") then (.'"${{ env.PUSH_ROOT_PATH }}"'.latest = "${{ env.PUSH_LATEST_PATH }}" | .'"${{ env.PUSH_ROOT_PATH }}"'.stable = "${{ env.PUSH_STABLE_PATH }}" | .'"${{ env.PUSH_ROOT_PATH }}"'.tags |= . + ["${{ github.event.release.tag_name }}"]) else (.'"${{ env.PUSH_ROOT_PATH }}"' = {latest: "${{ env.PUSH_LATEST_PATH }}", stable: "${{ env.PUSH_STABLE_PATH }}", tags: ["${{ github.event.release.tag_name }}"]}) end' ./docs/index.json > ./docs/temp.json
         mv ./docs/temp.json ./docs/index.json
-
     - name: Push
       continue-on-error: true
       working-directory: docs
@@ -78,5 +77,5 @@ jobs:
         git config user.name ${{ env.AUTH_LOGIN }}
         git config user.email ${{ env.AUTH_EMAIL }}
         git add .
-        git commit -m "update docs for ${{ github.repository }}"
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
         git push
