@@ -19,7 +19,7 @@ jobs:
       PULL_PATH: docs
 
       PUSH_REPOSITORY: ${{ github.repository_owner }}/docs
-      PUSH_ROOT_PATH: `x=${{ github.event.repository.name }}; echo ${x#discord-ext-}`
+      PUSH_ROOT_PATH: "`x=${{ github.event.repository.name }}; echo ${x#discord-ext-}`"
       PUSH_LATEST_PATH: latest
       PUSH_STABLE_PATH: stable
 
