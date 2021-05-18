@@ -19,8 +19,8 @@ jobs:
       PULL_PATH: docs
 
       PUSH_REPOSITORY: ${{ github.repository_owner }}/docs
-      PUSH_LATEST_PATH: main/test
-      PUSH_STABLE_PATH: main/stable
+      PUSH_LATEST_PATH: latest
+      PUSH_STABLE_PATH: stable
 
       PYTHON_VERSION: 3.9
       SPHINX_OPTIONS: -b dirhtml -a -E -n -T -W --keep-going
