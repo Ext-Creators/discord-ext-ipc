@@ -44,6 +44,6 @@ Installation
 See Also
 --------
 
-- The `documentation <https://discord-ext-ipc.readthedocs.io/>`_.
+- The `documentation <https://ext-creators.github.io/docs/ipc/>`_.
 - The `usage examples <https://github.com/Ext-Creators/discord-ext-ipc/tree/master/examples>`_.
 - The `Ext-Creators Discord <https://discord.gg/fwYfYZJGck>`_.
