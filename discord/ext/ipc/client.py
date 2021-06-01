@@ -131,7 +131,7 @@ class Client:
         }
 
         self._queue.put_nowait(payload)
-        self._requests[nonce] = future = asyncio.create_future()
+        self._requests[nonce] = future = self.loop.create_future()
         return await asyncio.wait_for(future, timeout)
 
     async def _send_requests(self):
