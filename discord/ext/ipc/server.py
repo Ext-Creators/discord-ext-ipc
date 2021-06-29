@@ -156,13 +156,17 @@ class Server:
                     response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
                     server_response = IpcServerResponse(request)
-                    attempted_cls = self.bot.cogs.get(
-                        self.endpoints[endpoint].__qualname__.split(".")[0]
-                    )
+                    try:
+                        attempted_cls = self.bot.cogs.get(
+                            self.endpoints[endpoint].__qualname__.split(".")[0]
+                        )
 
-                    if attempted_cls:
-                        arguments = (attempted_cls, server_response)
-                    else:
+                        if attempted_cls:
+                            arguments = (attempted_cls, server_response)
+                        else:
+                            arguments = (server_response,)
+                    except AttributeError:
+                        # Support base Client
                         arguments = (server_response,)
 
                     try:
