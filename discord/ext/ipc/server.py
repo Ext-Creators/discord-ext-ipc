@@ -95,8 +95,6 @@ class Server:
         self.do_multicast = do_multicast
         self.multicast_port = multicast_port
 
-        self.endpoints = {}
-
     def route(self, name=None):
         """Used to register a coroutine as an endpoint when you have
         access to an instance of :class:`.Server`.
@@ -109,19 +107,13 @@ class Server:
 
         def decorator(func):
             if not name:
-                self.endpoints[func.__name__] = func
+                self.ROUTES[func.__name__] = func
             else:
-                self.endpoints[name] = func
+                self.ROUTES[name] = func
 
             return func
 
         return decorator
-
-    def update_endpoints(self):
-        """Called internally to update the server's endpoints for cog routes."""
-        self.endpoints = {**self.endpoints, **self.ROUTES}
-
-        self.ROUTES = {}
 
     async def handle_accept(self, request):
         """Handles websocket requests from the client process.
@@ -131,7 +123,6 @@ class Server:
         request: :class:`~aiohttp.web.Request`
             The request made by the client, parsed by aiohttp.
         """
-        self.update_endpoints()
 
         log.info("Initiating IPC Server.")
 
@@ -151,14 +142,14 @@ class Server:
                 log.info("Received unauthorized request (Invalid or no token provided).")
                 response = {"error": "Invalid or no token provided.", "code": 403}
             else:
-                if not endpoint or endpoint not in self.endpoints:
+                if not endpoint or endpoint not in self.ROUTES:
                     log.info("Received invalid request (Invalid or no endpoint given).")
                     response = {"error": "Invalid or no endpoint given.", "code": 400}
                 else:
                     server_response = IpcServerResponse(request)
                     try:
                         attempted_cls = self.bot.cogs.get(
-                            self.endpoints[endpoint].__qualname__.split(".")[0]
+                            self.ROUTES[endpoint].__qualname__.split(".")[0]
                         )
 
                         if attempted_cls:
@@ -170,7 +161,7 @@ class Server:
                         arguments = (server_response,)
 
                     try:
-                        ret = await self.endpoints[endpoint](*arguments)
+                        ret = await self.ROUTES[endpoint](*arguments)
                         response = ret
                     except Exception as error:
                         log.error(
